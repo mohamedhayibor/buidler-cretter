@@ -77,7 +77,7 @@ contract StatementBank {
     
     // (1): stater posts a statement
     constructor() public payable {
-        require(msg.value == 0.04 ether);
+        require(msg.value == 0.04 ether, "Fund statement");
         stater = msg.sender;
         firstQuestioner = 1;
         lastQuestioner = 0;
