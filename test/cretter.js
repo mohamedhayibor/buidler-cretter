@@ -8,7 +8,7 @@ const eth = require("ethers");
 describe("Token contract", function() {
   let StatementBank;
   let statement;
-  let owner, addr1, addr2, addrs;
+  let owner, addr1, addr2, addr3, addrs;
 
   before(async function () {
     StatementBank = await ethers.getContractFactory("StatementBank")
@@ -23,7 +23,7 @@ describe("Token contract", function() {
     statement = await StatementBank.deploy({ value: eth.utils.parseEther("0.04") })
     await statement.deployed();
 
-    [owner, addr1, addr2, ...addrs] = await ethers.getSigners();
+    [owner, addr1, addr2, addr3, ...addrs] = await ethers.getSigners();
   })
 
   // Set up tests
@@ -45,8 +45,15 @@ describe("Token contract", function() {
     expect( statementBankBalance.toString() ).to.equal("40000000000000000");
   });
 
+  it("Addr1 asks a question", async function () {
+    let ask = await statement.connect(addr1).questionerStake({ value: eth.utils.parseEther("0.004") });
+    let statementBankBalance = await statement.statementBankBalance();
+    expect(statementBankBalance).to.equal("44000000000000000");
+  });
+
   // Interaction tests
-  // 1. addr1 asks question
+  // 1. addr1, addr2, addr3 ask questions > check statement balance
+
   // 2. owner provides answer
   // 3. addr2 votes down answer
   // 4. check proper finalization
