@@ -45,6 +45,19 @@ describe("Token contract", function() {
     expect( statementBankBalance.toString() ).to.equal("40000000000000000");
   });
 
+  /* This not working: I don't know why
+  it("Stater can't ask question", async function () {
+    await expect(await statement.questionerStake({ value: eth.utils.parseEther("0.004") }) ).to.be.revertedWith("Can't ask yourself a question");
+  });
+
+
+  it("Any amount different than 0.004 eth stake will fail to ask question", async function () {
+    let stakeWrongAmount = await statement.connect(addr1).questionerStake({ value: eth.utils.parseEther("0.008") });
+
+    await expect(stakeWrongAmount).to.be.revertedWith("You must stake 0.004 eth");
+  });
+  */
+
   it("Addr1 stakes 0.004 eth to ask a question", async function () {
     await statement.connect(addr1).questionerStake({ value: eth.utils.parseEther("0.004") });
     let statementBankBalance = await statement.statementBankBalance();
@@ -64,6 +77,23 @@ describe("Token contract", function() {
     let statementBankBalance = await statement.statementBankBalance();
     expect(statementBankBalance).to.equal("52000000000000000");
   });
+
+  it("Addr3 votes answer question 2", async function () {
+    await statement.connect(addr1).questionerStake({ value: eth.utils.parseEther("0.004") });
+    await statement.connect(addr2).questionerStake({ value: eth.utils.parseEther("0.004") });
+    await statement.connect(addr3).questionerStake({ value: eth.utils.parseEther("0.004") });
+
+    await statement.staterProvidesAnswer(1);
+
+    await statement.connect(addr3).vote(1, 2);
+
+    let staterAgainstQuestionIndex = await statement.staterAgainstQuestionIndex(1);
+
+    expect(staterAgainstQuestionIndex).to.equal(98);
+
+  });
+
+
 
 
 

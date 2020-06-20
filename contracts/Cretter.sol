@@ -106,7 +106,7 @@ contract StatementBank {
         // should be called before deadline
         require(questionDeadline > now);
         require(msg.value == 0.004 ether, "You must stake 0.004 eth");
-        require(stater != msg.sender);
+        require(stater != msg.sender, "Can't ask yourself a question");
         lastQuestioner = lastQuestioner.add(1);
         questioners[lastQuestioner] = msg.sender;
     }
