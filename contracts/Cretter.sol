@@ -38,7 +38,7 @@ library CheckOverflows {
  * $1 (0.004eth) to be a Questioner (Win: gets double of stake or lose it)
  * Strict order of actions: Statement -> Questioner -> Answer -> Votes -> Finalize
  */
- 
+
 /*
  * Time restriction: 
  *   - 4 days question voting
@@ -52,7 +52,7 @@ library CheckOverflows {
 // and gas refund
 contract StatementBank {
     using CheckOverflows for uint256;
-    
+
     address payable public stater; // owner
 
     uint256 public firstQuestioner;
@@ -60,19 +60,42 @@ contract StatementBank {
     uint256 public createdAt;
     uint256 public questionDeadline;
     uint256 public statementDeadline;
-    
+
     // returns the amount the statementBank has at all times
     function statementBankBalance() public view returns (uint256) {
         return address(this).balance;
     }
-    
+
     // potential util for generating a random number to get
     // voter who gets reward
     // set to public for testing [TODO: must set to private]
     // arg: _numberOfVoters number of voters
     // result: starts at zero | 
     function random(uint256 _numberOfVoters) public view returns (uint256) {
-        return uint256(keccak256(abi.encodePacked(block.timestamp, block.difficulty))) % _numberOfVoters;
+
+        console.log(">>> [random] _numberOfVoters: ", _numberOfVoters);
+
+        // return uint256(keccak256(abi.encodePacked(block.timestamp, block.difficulty))) % _numberOfVoters;
+        uint256 time = block.timestamp;
+        console.log(">> [random] time: ", time);
+
+        /*
+        let abiE = abi.encodePacked(time);
+        console.log(">> abiE: ", abiE);
+        let hash = keccak256(abiE);
+        console.log(">> hash: ", hash);
+        */
+
+        uint256 fullNumber = uint256(keccak256(abi.encodePacked(time)));
+
+        console.log(">> [random] fullNumber: ", fullNumber);
+
+        uint256 result = fullNumber % _numberOfVoters;
+
+        console.log(">>> [random] Result: ", result);
+
+        return result;
+
     }
     
     // (1): stater posts a statement
@@ -95,7 +118,7 @@ contract StatementBank {
     // 1st arg: _questionIndex
     // result: questioner's address
     mapping (uint256 => address payable) public questioners;
-    
+
 
     // (2): questioner asks a question
     // only question staker should be able to run this function
@@ -170,11 +193,17 @@ contract StatementBank {
         
         // 1 stater favor (agree answer)
         if (_vote == 1) {
+            
+            console.log("Upvoted statement at position: ", _questionIndex);
+
             staterAgainstQuestionIndex[_questionIndex] = staterAgainstQuestionIndex[_questionIndex].add(1);
             votedForStater[_questionIndex].push(msg.sender);
             
         // 2 questioner favor (disagree answer)
         } else if (_vote == 2) {
+
+            console.log("Downvoted statement at position: ", _questionIndex);
+
             staterAgainstQuestionIndex[_questionIndex] = staterAgainstQuestionIndex[_questionIndex].sub(1);
             votedForQuestioner[_questionIndex].push(msg.sender);
         }
@@ -193,19 +222,29 @@ contract StatementBank {
         require(lastQuestioner >= firstQuestioner, "queue must be non-empty");
         
         // Test still
-        require(msg.sender == address(0xa639cc7A169E848B280acd1B493a7D5Af44507a4)); 
-        
+        // require(msg.sender == address(0xa639cc7A169E848B280acd1B493a7D5Af44507a4)); 
+        console.log(">>> [finalize] firstQuestioner: ", firstQuestioner);
+
         // [Final a.] Pay questioner first if he won
         // if questioner didn't get an answer by this time > questioner wins (stater loses)
         if (questionGotAnswer[firstQuestioner] != 1 || staterAgainstQuestionIndex[firstQuestioner] < 100) {
             // questioner wins, he gets 2x his staked money
             questioners[firstQuestioner].transfer(0.008 ether);
-            
-            
+
+
             // reward a random ranker who betted on questioner
-            uint256 questLen = votedForQuestioner[firstQuestioner].length;
+
+            uint256 questLen = votedForQuestioner[firstQuestioner - 1].length;
+
+            console.log(">> [finalize] questLen: ", questLen);
+
             uint256 questVoteIndex = random(questLen);
-            address payable questionerRankingWinner = votedForQuestioner[firstQuestioner][questVoteIndex];
+
+            console.log(">> [finalize] questVoteIndex: ", questVoteIndex);
+
+            // Important votedForStater && votedForQuestioner started with index 0
+            // Must decrease by 1 for proper indexing
+            address payable questionerRankingWinner = votedForQuestioner[firstQuestioner - 1][questVoteIndex];
             
             // Variable reward: the earlier you voted the more you deserve a full reward
             
@@ -221,9 +260,9 @@ contract StatementBank {
             
             // > reward a random ranker who betted on stater
             
-            uint256 stateLen = votedForStater[firstQuestioner].length;
+            uint256 stateLen = votedForStater[firstQuestioner - 1].length;
             uint256 staterVoteIndex = random(stateLen);
-            address payable staterRankingWinner = votedForStater[firstQuestioner][staterVoteIndex];
+            address payable staterRankingWinner = votedForStater[firstQuestioner - 1][staterVoteIndex];
 
             
             uint256 stateVoterReward = uint256(2000000000000000).sub( uint256(2000000000000000).mul(staterVoteIndex).div(stateLen) );
