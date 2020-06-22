@@ -26,13 +26,14 @@ describe("Token contract", function() {
     [owner, addr1, addr2, addr3, ...addrs] = await ethers.getSigners();
   })
 
+
   // Set up tests
   it("Stater must be owner of the contract", async function() {
     const stater = await statement.stater();
     expect(stater).to.equal(await owner.getAddress());
   });
 
-  /*
+
   it("Contract deployment params", async function() {
     const lastQuestioner = await statement.lastQuestioner();
     const firstQuestioner = await statement.firstQuestioner();
@@ -40,13 +41,15 @@ describe("Token contract", function() {
     expect(lastQuestioner).to.equal(0);
     expect(firstQuestioner).to.equal(1);
   });
-  */
+
 
   it("StatementBankBalance must be 0.04 eth at deployment ", async function() {
     const statementBankBalance = await statement.statementBankBalance();
     expect( statementBankBalance.toString() ).to.equal("40000000000000000");
   });
 
+
+// Check this out again
 /*
   it("Stater can't ask question", async function () {
     await expect(await statement.questionerStake({ value: eth.utils.parseEther("0.004") }) ).to.be.reverted;
@@ -60,6 +63,7 @@ describe("Token contract", function() {
     await expect(stakeWrongAmount).to.be.reverted;
   });
 */
+
 
   it("Addr1 stakes 0.004 eth to ask a question", async function () {
     await statement.connect(addr1).questionerStake({ value: eth.utils.parseEther("0.004") });
@@ -96,7 +100,7 @@ describe("Token contract", function() {
 
   });
 
-  it("Multiple votes then finalize", async function () {
+  it("2 downVotes then finalize", async function () {
     await statement.connect(addr1).questionerStake({ value: eth.utils.parseEther("0.004") });
     await statement.connect(addr2).questionerStake({ value: eth.utils.parseEther("0.004") });
     await statement.connect(addr3).questionerStake({ value: eth.utils.parseEther("0.004") });
@@ -108,12 +112,37 @@ describe("Token contract", function() {
 
     await statement.finalizeQuestionerChallenge();
 
-    // let staterAgainstQuestionIndex = await statement.staterAgainstQuestionIndex(1);
-
-    // expect(staterAgainstQuestionIndex).to.equal(98);
+    expect(await statement.firstQuestioner() ).to.equal(2);
+    expect(await statement.lastQuestioner() ).to.equal(3);
 
   });
 
+
+
+  it("Stater receives whatever is left", async function () {
+    await statement.connect(addr1).questionerStake({ value: eth.utils.parseEther("0.004") });
+    await statement.connect(addr2).questionerStake({ value: eth.utils.parseEther("0.004") });
+
+    await statement.staterProvidesAnswer(0);
+    await statement.staterProvidesAnswer(1);
+
+    await statement.connect(addr3).vote(0, 2);
+    await statement.connect(addr2).vote(0, 2);
+
+
+    await statement.finalizeQuestionerChallenge();
+
+    await statement.connect(addr3).vote(1, 2);
+    await statement.connect(addr2).vote(1, 2);
+
+    await statement.finalizeQuestionerChallenge();
+
+    await statement.staterReceivesLoot();
+
+    // await statement.connect(addr1).vote(1, 2);
+    // await statement.connect(addr3).vote(1, 2);
+
+  });
   // Interaction tests
   // 1. addr1, addr2, addr3 ask questions > check statement balance
 

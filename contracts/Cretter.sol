@@ -2,6 +2,7 @@ pragma solidity ^0.6.8;
 
 // SPDX-License-Identifier: MIT
 // Above required: https://forum.openzeppelin.com/t/solidity-0-6-8-introduces-spdx-license-identifiers/2859
+
 import "@nomiclabs/buidler/console.sol";
 
 library CheckOverflows {
@@ -271,7 +272,12 @@ contract StatementBank {
         
         removedQuestionerAddr = questioners[firstQuestioner];
         delete questioners[firstQuestioner];
-        firstQuestioner.add(1);
+
+        console.log("[finalize] first (before): ", firstQuestioner);
+
+        firstQuestioner = firstQuestioner.add(1);
+
+        console.log("[finalize] first (after): ", firstQuestioner);
     }
     
     // Until a stater can retrieve money from the statementBankBalance
@@ -279,14 +285,17 @@ contract StatementBank {
     
     // Only Scheduler can call this
     function staterReceivesLoot() public {
-        require(msg.sender == address(0xa639cc7A169E848B280acd1B493a7D5Af44507a4));
+        // require(msg.sender == address(0xa639cc7A169E848B280acd1B493a7D5Af44507a4));
         // should be called after deadline
-        require(now > statementDeadline);
+        // require(now > statementDeadline);
+
+        console.log(">> [loot] firtQuestioner: ", firstQuestioner);
+        console.log(">> [loot] lastQuestioner: ", lastQuestioner);
         
         // We need a bunch of checks here 
         // All rounds of questions challenges must be done
         // All question challenges finalized
-        require(lastQuestioner == firstQuestioner, "All question challenges should be resolved");
+        require(lastQuestioner + 1 == firstQuestioner, "All question challenges should be resolved");
         
         // TODO: implement time waiting requirement
         // The only strict restriction is that enough time like 2 weeks should go on
@@ -297,6 +306,7 @@ contract StatementBank {
         
         cretterFundAddr.transfer(fundCretterFuture);
         stater.transfer(statementBankBalance() - fundCretterFuture);
+       
     }
     
     // Funders can donate and keep statement live
