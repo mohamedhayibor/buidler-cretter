@@ -73,32 +73,13 @@ contract StatementBank {
     // arg: _numberOfVoters number of voters
     // result: starts at zero | 
     function random(uint256 _numberOfVoters) public view returns (uint256) {
-
         console.log(">>> [random] _numberOfVoters: ", _numberOfVoters);
+        uint256 result = uint256(keccak256(abi.encodePacked(block.timestamp, block.difficulty))) % _numberOfVoters;
 
-        // return uint256(keccak256(abi.encodePacked(block.timestamp, block.difficulty))) % _numberOfVoters;
-        uint256 time = block.timestamp;
-        console.log(">> [random] time: ", time);
-
-        /*
-        let abiE = abi.encodePacked(time);
-        console.log(">> abiE: ", abiE);
-        let hash = keccak256(abiE);
-        console.log(">> hash: ", hash);
-        */
-
-        uint256 fullNumber = uint256(keccak256(abi.encodePacked(time)));
-
-        console.log(">> [random] fullNumber: ", fullNumber);
-
-        uint256 result = fullNumber % _numberOfVoters;
-
-        console.log(">>> [random] Result: ", result);
-
+        console.log(">>> [random] result: ", result);
         return result;
-
     }
-    
+
     // (1): stater posts a statement
     constructor() public payable {
         require(msg.value == 0.04 ether, "Fund statement");
