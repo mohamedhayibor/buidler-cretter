@@ -84,7 +84,7 @@ contract StatementBank {
     constructor() public payable {
         require(msg.value == 0.04 ether, "Fund statement");
         stater = msg.sender;
-        firstQuestioner = 1;
+        firstQuestioner = 0;
         lastQuestioner = 0;
         // natural unit of time on EVM is seconds
         createdAt = now;
@@ -215,20 +215,20 @@ contract StatementBank {
         // 0 is the default (represent not having an answer)
 
         // If SAQI is 99 voters didn't move the needle, they don't get paid
-        if (questionGotAnswer[firstQuestioner - 1] == 0 || staterAgainstQuestionIndex[firstQuestioner - 1] == 99) {
+        if (questionGotAnswer[firstQuestioner] == 0 || staterAgainstQuestionIndex[firstQuestioner] == 99) {
             console.log(">>> stater didn't answer, or SAQI is 99, questioner wins automatically");
-            questioners[firstQuestioner -1].transfer(0.008 ether);
+            questioners[firstQuestioner].transfer(0.008 ether);
             
-        } else if (staterAgainstQuestionIndex[firstQuestioner - 1] < 100) {
+        } else if (staterAgainstQuestionIndex[firstQuestioner] < 100) {
             // questioner wins, he gets 2x his staked money
-            questioners[firstQuestioner - 1].transfer(0.008 ether);
+            questioners[firstQuestioner].transfer(0.008 ether);
 
 
             console.log(">> [Finalize] stater lost");
 
             // reward a random ranker who betted on questioner
 
-            uint256 questLen = votedForQuestioner[firstQuestioner - 1].length;
+            uint256 questLen = votedForQuestioner[firstQuestioner].length;
 
             console.log(">> [finalize] questLen: ", questLen);
 
@@ -238,7 +238,7 @@ contract StatementBank {
 
             // Important votedForStater && votedForQuestioner started with index 0
             // Must decrease by 1 for proper indexing
-            address payable questionerRankingWinner = votedForQuestioner[firstQuestioner - 1][questVoteIndex];
+            address payable questionerRankingWinner = votedForQuestioner[firstQuestioner][questVoteIndex];
             
             // Variable reward: the earlier you voted the more you deserve a full reward
             
@@ -247,24 +247,24 @@ contract StatementBank {
             
             questionerRankingWinner.transfer(questVoterReward);
             
-        } else if (staterAgainstQuestionIndex[firstQuestioner - 1] >= 100) {
+        } else if (staterAgainstQuestionIndex[firstQuestioner] >= 100) {
             // stater is winning (a tie, he's still winning) coz
             // the goal of questioner is to kill the statement
             // > nothing to do here money stays in the contract
             
             // > reward a random ranker who betted on stater
             
-            uint256 stateLen = votedForStater[firstQuestioner - 1].length;
+            uint256 stateLen = votedForStater[firstQuestioner].length;
             uint256 staterVoteIndex = random(stateLen);
-            address payable staterRankingWinner = votedForStater[firstQuestioner - 1][staterVoteIndex];
+            address payable staterRankingWinner = votedForStater[firstQuestioner][staterVoteIndex];
 
             
             uint256 stateVoterReward = uint256(2000000000000000).sub( uint256(2000000000000000).mul(staterVoteIndex).div(stateLen) );
             staterRankingWinner.transfer(stateVoterReward);
         }
         
-        removedQuestionerAddr = questioners[firstQuestioner - 1];
-        delete questioners[firstQuestioner - 1];
+        removedQuestionerAddr = questioners[firstQuestioner];
+        delete questioners[firstQuestioner];
 
         console.log("[finalize] first (before): ", firstQuestioner);
 
@@ -288,7 +288,7 @@ contract StatementBank {
         // We need a bunch of checks here 
         // All rounds of questions challenges must be done
         // All question challenges finalized
-        require(lastQuestioner + 1 == firstQuestioner, "All question challenges should be resolved");
+        require(lastQuestioner == firstQuestioner, "All question challenges should be resolved");
         
         // TODO: implement time waiting requirement
         // The only strict restriction is that enough time like 2 weeks should go on

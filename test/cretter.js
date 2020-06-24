@@ -32,7 +32,7 @@ describe("Token contract", function() {
     expect(stater).to.equal(await owner.getAddress());
   });
 
-
+/*
   it("Contract deployment params", async function() {
     const lastQuestioner = await statement.lastQuestioner();
     const firstQuestioner = await statement.firstQuestioner();
@@ -40,7 +40,7 @@ describe("Token contract", function() {
     expect(lastQuestioner).to.equal(0);
     expect(firstQuestioner).to.equal(1);
   });
-
+*/
 
   it("StatementBankBalance must be 0.04 eth at deployment ", async function() {
     const statementBankBalance = await statement.statementBankBalance();
@@ -111,7 +111,7 @@ describe("Token contract", function() {
 
     await statement.finalizeQuestionerChallenge();
 
-    expect(await statement.firstQuestioner() ).to.equal(2);
+    expect(await statement.firstQuestioner() ).to.equal(1);
     expect(await statement.lastQuestioner() ).to.equal(3);
 
   });
