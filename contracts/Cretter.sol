@@ -128,11 +128,14 @@ contract StatementBank {
     function staterProvidesAnswer(uint256 _questionIndex) public {
         require (msg.sender == stater, "only stater can provide an answer no one else");
         
+        console.log(">>> [Stater answers] _questionIndex: ", _questionIndex);
         // stater can't signal he already answered a question
         // when a question hasn't been asked yet | mainly checking for existence
         require(lastQuestioner >= _questionIndex, "question hasn't been asked yet");
         
         questionGotAnswer[_questionIndex] = 1;
+
+        console.log("{Stater answers} questionGotAnswer[_questionIndex]: ", questionGotAnswer[_questionIndex]);
         
         // TODO: disable stater being able to call this function again.
         // Stater can't update or edit, an already supplied answer
@@ -208,7 +211,8 @@ contract StatementBank {
         console.log(">>> [finalize] firstQuestioner: ", firstQuestioner);
 
         // If stater didn't answer, questioner wins automatically
-        if (questionGotAnswer[firstQuestioner] != 1) {
+        // 0 is the default (represent not having an answer)
+        if (questionGotAnswer[firstQuestioner - 1] == 0) {
             console.log(">>> stater didn't answer, questioner wins automatically");
             questioners[firstQuestioner].transfer(0.008 ether); 
         } else if (staterAgainstQuestionIndex[firstQuestioner] < 100) {

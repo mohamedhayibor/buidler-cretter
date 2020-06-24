@@ -152,30 +152,30 @@ describe("Token contract", function() {
    * 2. if no votes staterAgainstQuestionIndex [SAQI] is 99 
    */
   // https://ethereum-waffle.readthedocs.io/en/latest/matchers.html
+
   it("If questioner didn't get answer from stater, he wins by default", async function () {
     await statement.connect(addr1).questionerStake({ value: eth.utils.parseEther("0.004") })
     expect( () => statement.finalizeQuestionerChallenge()).to.changeBalances([owner, addr1], [eth.utils.parseEther("0.004"), -eth.utils.parseEther("0.004")]);
   })
 
 
-
-
 /*
-  it("When no answer provided SAQI must be 99", async function () {
+  it("Stater provides an answer but no votes, SAQI must be 99, stater loses", async function () {
     await statement.connect(addr1).questionerStake({ value: eth.utils.parseEther("0.004") })
 
     await statement.staterProvidesAnswer(0);
 
     await statement.finalizeQuestionerChallenge();
 
-    let SAQI = await statement.staterAgainstQuestionIndex();
+    let SAQI = await statement.staterAgainstQuestionIndex(0);
 
-    console.log(">> SAQI: ", SAQI);
+    console.log(">> SAQI: ", SAQI.toString());
+    console.log(">> SAQI: typeof ", typeof SAQI);
 
     expect(SAQI).to.equal(99);
   });
 */
-    // await statement.staterReceivesLoot();
+
 
 
 
