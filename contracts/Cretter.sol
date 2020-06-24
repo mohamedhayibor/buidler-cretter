@@ -203,7 +203,6 @@ contract StatementBank {
     // * To save on transfer fees and give an addictive spin:
     // * choose a random ranker who got it right and pay him $0.5
     // [originally 10% of the questioner's stake was the spec]
-    // Extra caution: _questionIndex is equivalent of [firstQuestioner - 1]
     function finalizeQuestionerChallenge () public returns (address removedQuestionerAddr) {
         require(lastQuestioner >= firstQuestioner, "queue must be non-empty");
         
