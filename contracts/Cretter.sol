@@ -203,6 +203,7 @@ contract StatementBank {
     // * To save on transfer fees and give an addictive spin:
     // * choose a random ranker who got it right and pay him $0.5
     // [originally 10% of the questioner's stake was the spec]
+    // Extra caution: _questionIndex is equivalent of [firstQuestioner - 1]
     function finalizeQuestionerChallenge () public returns (address removedQuestionerAddr) {
         require(lastQuestioner >= firstQuestioner, "queue must be non-empty");
         
@@ -212,12 +213,15 @@ contract StatementBank {
 
         // If stater didn't answer, questioner wins automatically
         // 0 is the default (represent not having an answer)
-        if (questionGotAnswer[firstQuestioner - 1] == 0) {
-            console.log(">>> stater didn't answer, questioner wins automatically");
-            questioners[firstQuestioner].transfer(0.008 ether); 
-        } else if (staterAgainstQuestionIndex[firstQuestioner] < 100) {
+
+        // If SAQI is 99 voters didn't move the needle, they don't get paid
+        if (questionGotAnswer[firstQuestioner - 1] == 0 || staterAgainstQuestionIndex[firstQuestioner - 1] == 99) {
+            console.log(">>> stater didn't answer, or SAQI is 99, questioner wins automatically");
+            questioners[firstQuestioner -1].transfer(0.008 ether);
+            
+        } else if (staterAgainstQuestionIndex[firstQuestioner - 1] < 100) {
             // questioner wins, he gets 2x his staked money
-            questioners[firstQuestioner].transfer(0.008 ether);
+            questioners[firstQuestioner - 1].transfer(0.008 ether);
 
 
             console.log(">> [Finalize] stater lost");
@@ -243,7 +247,7 @@ contract StatementBank {
             
             questionerRankingWinner.transfer(questVoterReward);
             
-        } else if (staterAgainstQuestionIndex[firstQuestioner] >= 100) {
+        } else if (staterAgainstQuestionIndex[firstQuestioner - 1] >= 100) {
             // stater is winning (a tie, he's still winning) coz
             // the goal of questioner is to kill the statement
             // > nothing to do here money stays in the contract
@@ -259,8 +263,8 @@ contract StatementBank {
             staterRankingWinner.transfer(stateVoterReward);
         }
         
-        removedQuestionerAddr = questioners[firstQuestioner];
-        delete questioners[firstQuestioner];
+        removedQuestionerAddr = questioners[firstQuestioner - 1];
+        delete questioners[firstQuestioner - 1];
 
         console.log("[finalize] first (before): ", firstQuestioner);
 

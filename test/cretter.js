@@ -26,7 +26,6 @@ describe("Token contract", function() {
     [owner, addr1, addr2, addr3, ...addrs] = await ethers.getSigners();
   })
 
-  /*
   // Set up tests
   it("Stater must be owner of the contract", async function() {
     const stater = await statement.stater();
@@ -47,7 +46,6 @@ describe("Token contract", function() {
     const statementBankBalance = await statement.statementBankBalance();
     expect( statementBankBalance.toString() ).to.equal("40000000000000000");
   });
-  */
 
 
 // Check this out again
@@ -65,7 +63,7 @@ describe("Token contract", function() {
   });
 */
 
-  /*
+
   it("Addr1 stakes 0.004 eth to ask a question", async function () {
     await statement.connect(addr1).questionerStake({ value: eth.utils.parseEther("0.004") });
     let statementBankBalance = await statement.statementBankBalance();
@@ -119,7 +117,6 @@ describe("Token contract", function() {
   });
 
 
-
   it("Stater receives whatever is left", async function () {
     await statement.connect(addr1).questionerStake({ value: eth.utils.parseEther("0.004") });
     await statement.connect(addr2).questionerStake({ value: eth.utils.parseEther("0.004") });
@@ -144,7 +141,6 @@ describe("Token contract", function() {
     // await statement.connect(addr3).vote(1, 2);
   });
 
-*/
 
   /****** Voting Tests
    * Make sure all Finalization outcomes are covered:
