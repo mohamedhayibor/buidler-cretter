@@ -26,7 +26,7 @@ describe("Token contract", function() {
     [owner, addr1, addr2, addr3, ...addrs] = await ethers.getSigners();
   })
 
-
+  /*
   // Set up tests
   it("Stater must be owner of the contract", async function() {
     const stater = await statement.stater();
@@ -47,6 +47,7 @@ describe("Token contract", function() {
     const statementBankBalance = await statement.statementBankBalance();
     expect( statementBankBalance.toString() ).to.equal("40000000000000000");
   });
+  */
 
 
 // Check this out again
@@ -64,7 +65,7 @@ describe("Token contract", function() {
   });
 */
 
-
+  /*
   it("Addr1 stakes 0.004 eth to ask a question", async function () {
     await statement.connect(addr1).questionerStake({ value: eth.utils.parseEther("0.004") });
     let statementBankBalance = await statement.statementBankBalance();
@@ -141,8 +142,48 @@ describe("Token contract", function() {
 
     // await statement.connect(addr1).vote(1, 2);
     // await statement.connect(addr3).vote(1, 2);
-
   });
+
+*/
+
+  /****** Voting Tests
+   * Make sure all Finalization outcomes are covered:
+   * 1. No answer > questioner wins
+   * 2. if no votes staterAgainstQuestionIndex [SAQI] is 99 
+   */
+
+  it("If questioner didn't get answer from stater, he wins by default", async function () {
+    await statement.connect(addr1).questionerStake({ value: eth.utils.parseEther("0.004") })
+    expect( () => statement.finalizeQuestionerChallenge()).to.changeBalance(addr1, eth.utils.parseEther("0.004"));
+  })
+
+
+
+
+/*
+  it("When no answer provided SAQI must be 99", async function () {
+    await statement.connect(addr1).questionerStake({ value: eth.utils.parseEther("0.004") })
+
+    await statement.staterProvidesAnswer(0);
+
+    await statement.finalizeQuestionerChallenge();
+
+    let SAQI = await statement.staterAgainstQuestionIndex();
+
+    console.log(">> SAQI: ", SAQI);
+
+    expect(SAQI).to.equal(99);
+  });
+*/
+    // await statement.staterReceivesLoot();
+
+
+
+
+
+
+
+
   // Interaction tests
   // 1. addr1, addr2, addr3 ask questions > check statement balance
 

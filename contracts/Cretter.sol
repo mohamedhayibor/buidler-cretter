@@ -142,11 +142,11 @@ contract StatementBank {
 
     // 1st arg: _questionIndex
     // 2nd arg: _truthIndex
-    // the truth index starts at 100
+    // the truth index threshold is 100 (100 or above stater wins - starts at 99)
     // lower: stater is losing argument over the question at _questionIndex
     // higher: stater is winning argument ...
     mapping (uint256 => uint256) public staterAgainstQuestionIndex;
-    
+
     // 1st arg: _questionIndex
     // 2nd arg: voterAddress
     // 3rd: 1 > signifies [voted] // existence means yes/1
@@ -207,12 +207,16 @@ contract StatementBank {
         // require(msg.sender == address(0xa639cc7A169E848B280acd1B493a7D5Af44507a4)); 
         console.log(">>> [finalize] firstQuestioner: ", firstQuestioner);
 
-        // [Final a.] Pay questioner first if he won
-        // if questioner didn't get an answer by this time > questioner wins (stater loses)
-        if (questionGotAnswer[firstQuestioner] != 1 || staterAgainstQuestionIndex[firstQuestioner] < 100) {
+        // If stater didn't answer, questioner wins automatically
+        if (questionGotAnswer[firstQuestioner] != 1) {
+            console.log(">>> stater didn't answer, questioner wins automatically");
+            questioners[firstQuestioner].transfer(0.008 ether); 
+        } else if (staterAgainstQuestionIndex[firstQuestioner] < 100) {
             // questioner wins, he gets 2x his staked money
             questioners[firstQuestioner].transfer(0.008 ether);
 
+
+            console.log(">> [Finalize] stater lost");
 
             // reward a random ranker who betted on questioner
 
