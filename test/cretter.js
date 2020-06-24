@@ -151,10 +151,10 @@ describe("Token contract", function() {
    * 1. No answer > questioner wins
    * 2. if no votes staterAgainstQuestionIndex [SAQI] is 99 
    */
-
+  // https://ethereum-waffle.readthedocs.io/en/latest/matchers.html
   it("If questioner didn't get answer from stater, he wins by default", async function () {
     await statement.connect(addr1).questionerStake({ value: eth.utils.parseEther("0.004") })
-    expect( () => statement.finalizeQuestionerChallenge()).to.changeBalance(addr1, eth.utils.parseEther("0.004"));
+    expect( () => statement.finalizeQuestionerChallenge()).to.changeBalances([owner, addr1], [eth.utils.parseEther("0.004"), -eth.utils.parseEther("0.004")]);
   })
 
 
