@@ -1,10 +1,5 @@
 pragma solidity ^0.6.8;
 
-// SPDX-License-Identifier: MIT
-// Above required: https://forum.openzeppelin.com/t/solidity-0-6-8-introduces-spdx-license-identifiers/2859
-
-import "@nomiclabs/buidler/console.sol";
-
 library CheckOverflows {
     function add(uint256 n1, uint256 n2) internal pure returns(uint256 n3) {
         n3 = n1 + n2;
@@ -73,11 +68,7 @@ contract StatementBank {
     // arg: _numberOfVoters number of voters
     // result: starts at zero | 
     function random(uint256 _numberOfVoters) public view returns (uint256) {
-        console.log(">>> [random] _numberOfVoters: ", _numberOfVoters);
-        uint256 result = uint256(keccak256(abi.encodePacked(block.timestamp, block.difficulty))) % _numberOfVoters;
-
-        console.log(">>> [random] result: ", result);
-        return result;
+        return = uint256(keccak256(abi.encodePacked(block.timestamp, block.difficulty))) % _numberOfVoters;
     }
 
     // (1): stater posts a statement
@@ -175,17 +166,11 @@ contract StatementBank {
         
         // 1 stater favor (agree answer)
         if (_vote == 1) {
-            
-            console.log("Upvoted statement at position: ", _questionIndex);
-
             staterAgainstQuestionIndex[_questionIndex] = staterAgainstQuestionIndex[_questionIndex].add(1);
             votedForStater[_questionIndex].push(msg.sender);
             
         // 2 questioner favor (disagree answer)
         } else if (_vote == 2) {
-
-            console.log("Downvoted statement at position: ", _questionIndex);
-
             staterAgainstQuestionIndex[_questionIndex] = staterAgainstQuestionIndex[_questionIndex].sub(1);
             votedForQuestioner[_questionIndex].push(msg.sender);
         }
@@ -205,24 +190,17 @@ contract StatementBank {
         
         // Test still
         // require(msg.sender == address(0xa639cc7A169E848B280acd1B493a7D5Af44507a4)); 
-        console.log(">>> [finalize] firstQuestioner: ", firstQuestioner);
 
         // [Final a.] Pay questioner first if he won
         // if questioner didn't get an answer by this time > questioner wins (stater loses)
         if (questionGotAnswer[firstQuestioner] != 1 || staterAgainstQuestionIndex[firstQuestioner] < 100) {
             // questioner wins, he gets 2x his staked money
             questioners[firstQuestioner].transfer(0.008 ether);
-
-
             // reward a random ranker who betted on questioner
 
             uint256 questLen = votedForQuestioner[firstQuestioner - 1].length;
 
-            console.log(">> [finalize] questLen: ", questLen);
-
             uint256 questVoteIndex = random(questLen);
-
-            console.log(">> [finalize] questVoteIndex: ", questVoteIndex);
 
             // Important votedForStater && votedForQuestioner started with index 0
             // Must decrease by 1 for proper indexing
@@ -254,11 +232,7 @@ contract StatementBank {
         removedQuestionerAddr = questioners[firstQuestioner];
         delete questioners[firstQuestioner];
 
-        console.log("[finalize] first (before): ", firstQuestioner);
-
         firstQuestioner = firstQuestioner.add(1);
-
-        console.log("[finalize] first (after): ", firstQuestioner);
     }
     
     // Until a stater can retrieve money from the statementBankBalance
@@ -269,9 +243,6 @@ contract StatementBank {
         // require(msg.sender == address(0xa639cc7A169E848B280acd1B493a7D5Af44507a4));
         // should be called after deadline
         // require(now > statementDeadline);
-
-        console.log(">> [loot] firtQuestioner: ", firstQuestioner);
-        console.log(">> [loot] lastQuestioner: ", lastQuestioner);
         
         // We need a bunch of checks here 
         // All rounds of questions challenges must be done
@@ -286,8 +257,7 @@ contract StatementBank {
         address payable cretterFundAddr = 0x87aD567CE024832E60529e11e70cb3788611F1E8;
         
         cretterFundAddr.transfer(fundCretterFuture);
-        stater.transfer(statementBankBalance() - fundCretterFuture);
-       
+        stater.transfer(statementBankBalance() - fundCretterFuture);      
     }
     
     // Funders can donate and keep statement live
