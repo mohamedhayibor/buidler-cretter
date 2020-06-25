@@ -60,7 +60,7 @@ contract StatementBank {
     uint256 public lastQuestioner;
     uint256 public createdAt;
     uint256 public questionDeadline;
-    uint256 public statementDeadline;
+    uint256 public statementTimeLock;
 
     // returns the amount the statementBank has at all times
     function statementBankBalance() public view returns (uint256) {
@@ -90,7 +90,7 @@ contract StatementBank {
         createdAt = now;
         // 18 days to ask a questions
         questionDeadline = now + 22 days;
-        statementDeadline = now + 31 days;
+        statementTimeLock = now + 31 days;
     }
 
     // We're using a FIFO data structure, that represents the order of
@@ -278,7 +278,7 @@ contract StatementBank {
     function staterReceivesLoot() public {
         // require(msg.sender == address(0xa639cc7A169E848B280acd1B493a7D5Af44507a4));
         // should be called after deadline
-        // require(now > statementDeadline);
+        require(now > statementTimeLock);
 
         console.log(">> [loot] firtQuestioner: ", firstQuestioner);
         console.log(">> [loot] lastQuestioner: ", lastQuestioner);

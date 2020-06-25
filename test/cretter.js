@@ -139,6 +139,10 @@ describe("Token contract", function() {
 
     await statement.finalizeQuestionerChallenge();
 
+    // Time travelling to end of statementTimeLock
+    let statementTimeLock = await statement.statementTimeLock();
+    await ethers.provider.send("evm_mine", [Number(statementTimeLock.toString())]);
+
     await statement.staterReceivesLoot();
   });
 
@@ -163,9 +167,12 @@ describe("Token contract", function() {
 
     await statement.finalizeQuestionerChallenge();
 
+    // Time travelling to end of statementTimeLock
+    let statementTimeLock = await statement.statementTimeLock();
+    await ethers.provider.send("evm_mine", [Number(statementTimeLock.toString())]);
+
     await statement.staterReceivesLoot();
   });
-
 /*
   it("Stater receives whatever is left", async function () {
     await statement.connect(addr1).questionerStake({ value: eth.utils.parseEther("0.004") });
