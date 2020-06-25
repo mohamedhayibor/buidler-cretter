@@ -213,7 +213,7 @@ contract StatementBank {
         // If stater didn't answer, questioner wins automatically
         // 0 is the default (represent not having an answer)
 
-        // If SAQI is 99 voters didn't move the needle, they don't get paid
+        // If SAQI is 99, voters didn't move the needle, they don't get paid
         if (questionGotAnswer[firstQuestioner] == 0 || staterAgainstQuestionIndex[firstQuestioner] == 99) {
             console.log(">>> stater didn't answer, or SAQI is 99, questioner wins automatically");
             questioners[firstQuestioner].transfer(0.008 ether);
@@ -222,8 +222,7 @@ contract StatementBank {
             // questioner wins, he gets 2x his staked money
             questioners[firstQuestioner].transfer(0.008 ether);
 
-
-            console.log(">> [Finalize] stater lost");
+            console.log(">> [Finalize] stater lost: SAQI: ", staterAgainstQuestionIndex[firstQuestioner]);
 
             // reward a random ranker who betted on questioner
 
@@ -250,7 +249,7 @@ contract StatementBank {
             // stater is winning (a tie, he's still winning) coz
             // the goal of questioner is to kill the statement
             // > nothing to do here money stays in the contract
-            
+            console.log(">> [Finalize] stater won: SAQI: ", staterAgainstQuestionIndex[firstQuestioner]);
             // > reward a random ranker who betted on stater
             
             uint256 stateLen = votedForStater[firstQuestioner].length;
