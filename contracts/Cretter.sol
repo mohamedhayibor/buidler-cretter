@@ -68,7 +68,7 @@ contract StatementBank {
     // arg: _numberOfVoters number of voters
     // result: starts at zero | 
     function random(uint256 _numberOfVoters) public view returns (uint256) {
-        return = uint256(keccak256(abi.encodePacked(block.timestamp, block.difficulty))) % _numberOfVoters;
+        return uint256(keccak256(abi.encodePacked(block.timestamp, block.difficulty))) % _numberOfVoters;
     }
 
     // (1): stater posts a statement
@@ -80,8 +80,8 @@ contract StatementBank {
         // natural unit of time on EVM is seconds
         createdAt = now;
         // 18 days to ask a questions
-        questionDeadline = now + 22 days;
-        statementTimeLock = now + 31 days;
+        questionDeadline = now + 5 minutes;
+        statementTimeLock = now + 10 minutes;
     }
 
     // We're using a FIFO data structure, that represents the order of
