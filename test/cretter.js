@@ -64,6 +64,12 @@ describe("Token contract", function() {
     expect(statementBankBalance).to.equal("44000000000000000");
   });
 
+  it("Can't vote unless there is an answer already", async function() {
+    await statement.connect(addr1).questionerStake({ value: eth.utils.parseEther("0.004") });
+
+    await expect(statement.connect(addr3).vote(0, 2)).to.be.reverted;
+  });
+
   it("Addr1, addr2, addr3 ask a question, stater answer question 2", async function () {
     await statement.connect(addr1).questionerStake({ value: eth.utils.parseEther("0.004") });
     await statement.connect(addr2).questionerStake({ value: eth.utils.parseEther("0.004") });
