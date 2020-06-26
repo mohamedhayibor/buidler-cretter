@@ -26,6 +26,20 @@ describe("Token contract", function() {
     [owner, addr1, addr2, addr3, ...addrs] = await ethers.getSigners();
   })
 
+  it("Stater can't ask question", async function () {
+    await expect(statement.questionerStake({ value: eth.utils.parseEther("0.004") }) ).to.be.reverted;
+  });
+
+
+  it("Any amount different than 0.004 eth stake will fail to ask question", async function () {
+    let stakeWrongAmount = statement.connect(addr1).questionerStake({ value: eth.utils.parseEther("0.008") });
+    await expect(stakeWrongAmount).to.be.reverted;
+  });
+
+  it("Stater should NOT be able to signal answer, when question is not already asked", async function() {
+    await expect(statement.staterProvidesAnswer(0)).to.be.reverted;
+  });
+
   it("Stater must be owner of the contract", async function() {
     const stater = await statement.stater();
     expect(stater).to.equal(await owner.getAddress());
@@ -173,6 +187,7 @@ describe("Token contract", function() {
 
     await statement.staterReceivesLoot();
   });
+
 /*
   it("Stater receives whatever is left", async function () {
     await statement.connect(addr1).questionerStake({ value: eth.utils.parseEther("0.004") });

@@ -121,7 +121,7 @@ contract StatementBank {
 
         // stater can't signal he already answered a question
         // when a question hasn't been asked yet | mainly checking for existence
-        require(lastQuestioner >= _questionIndex);
+        require(lastQuestioner > _questionIndex);
         
         questionGotAnswer[_questionIndex] = 1;
         
@@ -159,6 +159,7 @@ contract StatementBank {
         
         // stater or questioner can't vote
         require(msg.sender != stater);
+        // This has a 0.2% gas limit addition so add it (not big)
         require(msg.sender != questioners[_questionIndex]);
         
         // if already voted _questionIndex, can't vote again
