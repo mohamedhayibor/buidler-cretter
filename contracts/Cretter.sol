@@ -55,7 +55,7 @@ contract StatementBank {
     uint256 public lastQuestioner;
     uint256 public createdAt;
     uint256 public questionDeadline;
-    uint256 public statementDeadline;
+    uint256 public statementTimeLock;
 
     // returns the amount the statementBank has at all times
     function statementBankBalance() public view returns (uint256) {
@@ -75,13 +75,13 @@ contract StatementBank {
     constructor() public payable {
         require(msg.value == 0.04 ether, "Fund statement");
         stater = msg.sender;
-        firstQuestioner = 1;
+        firstQuestioner = 0;
         lastQuestioner = 0;
         // natural unit of time on EVM is seconds
         createdAt = now;
         // 18 days to ask a questions
         questionDeadline = now + 22 days;
-        statementDeadline = now + 31 days;
+        statementTimeLock = now + 31 days;
     }
 
     // We're using a FIFO data structure, that represents the order of
@@ -119,11 +119,14 @@ contract StatementBank {
     function staterProvidesAnswer(uint256 _questionIndex) public {
         require (msg.sender == stater, "only stater can provide an answer no one else");
         
+        console.log(">>> [Stater answers] _questionIndex: ", _questionIndex);
         // stater can't signal he already answered a question
         // when a question hasn't been asked yet | mainly checking for existence
         require(lastQuestioner >= _questionIndex, "question hasn't been asked yet");
         
         questionGotAnswer[_questionIndex] = 1;
+
+        console.log("{Stater answers} questionGotAnswer[_questionIndex]: ", questionGotAnswer[_questionIndex]);
         
         // TODO: disable stater being able to call this function again.
         // Stater can't update or edit, an already supplied answer
@@ -133,11 +136,11 @@ contract StatementBank {
 
     // 1st arg: _questionIndex
     // 2nd arg: _truthIndex
-    // the truth index starts at 100
+    // the truth index threshold is 100 (100 or above stater wins - starts at 99)
     // lower: stater is losing argument over the question at _questionIndex
     // higher: stater is winning argument ...
     mapping (uint256 => uint256) public staterAgainstQuestionIndex;
-    
+
     // 1st arg: _questionIndex
     // 2nd arg: voterAddress
     // 3rd: 1 > signifies [voted] // existence means yes/1
@@ -191,20 +194,28 @@ contract StatementBank {
         // Test still
         // require(msg.sender == address(0xa639cc7A169E848B280acd1B493a7D5Af44507a4)); 
 
-        // [Final a.] Pay questioner first if he won
-        // if questioner didn't get an answer by this time > questioner wins (stater loses)
-        if (questionGotAnswer[firstQuestioner] != 1 || staterAgainstQuestionIndex[firstQuestioner] < 100) {
+        // If stater didn't answer, questioner wins automatically
+        // 0 is the default (represent not having an answer)
+
+        // If SAQI is 99, voters didn't move the needle, they don't get paid
+        if (questionGotAnswer[firstQuestioner] == 0 || staterAgainstQuestionIndex[firstQuestioner] == 99) {
+            console.log(">>> stater didn't answer, or SAQI is 99, questioner wins automatically");
+            questioners[firstQuestioner].transfer(0.008 ether);
+            
+        } else if (staterAgainstQuestionIndex[firstQuestioner] < 100) {
             // questioner wins, he gets 2x his staked money
             questioners[firstQuestioner].transfer(0.008 ether);
+
+            console.log(">> [Finalize] stater lost: SAQI: ", staterAgainstQuestionIndex[firstQuestioner]);
             // reward a random ranker who betted on questioner
 
-            uint256 questLen = votedForQuestioner[firstQuestioner - 1].length;
+            uint256 questLen = votedForQuestioner[firstQuestioner].length;
 
             uint256 questVoteIndex = random(questLen);
 
             // Important votedForStater && votedForQuestioner started with index 0
             // Must decrease by 1 for proper indexing
-            address payable questionerRankingWinner = votedForQuestioner[firstQuestioner - 1][questVoteIndex];
+            address payable questionerRankingWinner = votedForQuestioner[firstQuestioner][questVoteIndex];
             
             // Variable reward: the earlier you voted the more you deserve a full reward
             
@@ -217,12 +228,12 @@ contract StatementBank {
             // stater is winning (a tie, he's still winning) coz
             // the goal of questioner is to kill the statement
             // > nothing to do here money stays in the contract
-            
+            console.log(">> [Finalize] stater won: SAQI: ", staterAgainstQuestionIndex[firstQuestioner]);
             // > reward a random ranker who betted on stater
             
-            uint256 stateLen = votedForStater[firstQuestioner - 1].length;
+            uint256 stateLen = votedForStater[firstQuestioner].length;
             uint256 staterVoteIndex = random(stateLen);
-            address payable staterRankingWinner = votedForStater[firstQuestioner - 1][staterVoteIndex];
+            address payable staterRankingWinner = votedForStater[firstQuestioner][staterVoteIndex];
 
             
             uint256 stateVoterReward = uint256(2000000000000000).sub( uint256(2000000000000000).mul(staterVoteIndex).div(stateLen) );
@@ -242,12 +253,16 @@ contract StatementBank {
     function staterReceivesLoot() public {
         // require(msg.sender == address(0xa639cc7A169E848B280acd1B493a7D5Af44507a4));
         // should be called after deadline
-        // require(now > statementDeadline);
+
+        require(now > statementTimeLock);
+
+        console.log(">> [loot] firtQuestioner: ", firstQuestioner);
+        console.log(">> [loot] lastQuestioner: ", lastQuestioner);
         
         // We need a bunch of checks here 
         // All rounds of questions challenges must be done
         // All question challenges finalized
-        require(lastQuestioner + 1 == firstQuestioner, "All question challenges should be resolved");
+        require(lastQuestioner == firstQuestioner, "All question challenges should be resolved");
         
         // TODO: implement time waiting requirement
         // The only strict restriction is that enough time like 2 weeks should go on
