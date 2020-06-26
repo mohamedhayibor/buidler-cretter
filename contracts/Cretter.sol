@@ -118,15 +118,12 @@ contract StatementBank {
     // the question is by making a transaction
     function staterProvidesAnswer(uint256 _questionIndex) public {
         require (msg.sender == stater, "only stater can provide an answer no one else");
-        
-        console.log(">>> [Stater answers] _questionIndex: ", _questionIndex);
+
         // stater can't signal he already answered a question
         // when a question hasn't been asked yet | mainly checking for existence
         require(lastQuestioner >= _questionIndex, "question hasn't been asked yet");
         
         questionGotAnswer[_questionIndex] = 1;
-
-        console.log("{Stater answers} questionGotAnswer[_questionIndex]: ", questionGotAnswer[_questionIndex]);
         
         // TODO: disable stater being able to call this function again.
         // Stater can't update or edit, an already supplied answer
@@ -199,14 +196,11 @@ contract StatementBank {
 
         // If SAQI is 99, voters didn't move the needle, they don't get paid
         if (questionGotAnswer[firstQuestioner] == 0 || staterAgainstQuestionIndex[firstQuestioner] == 99) {
-            console.log(">>> stater didn't answer, or SAQI is 99, questioner wins automatically");
             questioners[firstQuestioner].transfer(0.008 ether);
-            
         } else if (staterAgainstQuestionIndex[firstQuestioner] < 100) {
             // questioner wins, he gets 2x his staked money
             questioners[firstQuestioner].transfer(0.008 ether);
 
-            console.log(">> [Finalize] stater lost: SAQI: ", staterAgainstQuestionIndex[firstQuestioner]);
             // reward a random ranker who betted on questioner
 
             uint256 questLen = votedForQuestioner[firstQuestioner].length;
@@ -228,7 +222,6 @@ contract StatementBank {
             // stater is winning (a tie, he's still winning) coz
             // the goal of questioner is to kill the statement
             // > nothing to do here money stays in the contract
-            console.log(">> [Finalize] stater won: SAQI: ", staterAgainstQuestionIndex[firstQuestioner]);
             // > reward a random ranker who betted on stater
             
             uint256 stateLen = votedForStater[firstQuestioner].length;
@@ -256,8 +249,6 @@ contract StatementBank {
 
         require(now > statementTimeLock);
 
-        console.log(">> [loot] firtQuestioner: ", firstQuestioner);
-        console.log(">> [loot] lastQuestioner: ", lastQuestioner);
         
         // We need a bunch of checks here 
         // All rounds of questions challenges must be done
