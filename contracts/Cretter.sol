@@ -73,7 +73,7 @@ contract StatementBank {
 
     // (1): stater posts a statement
     constructor() public payable {
-        require(msg.value == 0.04 ether, "Fund statement");
+        require(msg.value == 0.04 ether);
         stater = msg.sender;
         firstQuestioner = 0;
         lastQuestioner = 0;
@@ -101,8 +101,8 @@ contract StatementBank {
     function questionerStake() payable public {
         // should be called before deadline
         require(questionDeadline > now);
-        require(msg.value == 0.004 ether, "You must stake 0.004 eth");
-        require(stater != msg.sender, "Can't ask yourself a question");
+        require(msg.value == 0.004 ether);
+        require(stater != msg.sender);
         lastQuestioner = lastQuestioner.add(1);
         questioners[lastQuestioner] = msg.sender;
     }
@@ -117,11 +117,11 @@ contract StatementBank {
     // The only way for the stater to signal that he/she actually answered
     // the question is by making a transaction
     function staterProvidesAnswer(uint256 _questionIndex) public {
-        require (msg.sender == stater, "only stater can provide an answer no one else");
+        require (msg.sender == stater);
 
         // stater can't signal he already answered a question
         // when a question hasn't been asked yet | mainly checking for existence
-        require(lastQuestioner >= _questionIndex, "question hasn't been asked yet");
+        require(lastQuestioner >= _questionIndex);
         
         questionGotAnswer[_questionIndex] = 1;
         
@@ -155,14 +155,14 @@ contract StatementBank {
     // 2nd arg: vote: 1 stater favor (agree answer), 2 questioner favor (disagree answer)
     function vote(uint256 _questionIndex, uint256 _vote) public {
         
-        require(questionGotAnswer[_questionIndex] == 1, "You can't vote if stater hasn't answered yet");
+        require(questionGotAnswer[_questionIndex] == 1);
         
         // stater or questioner can't vote
-        require(msg.sender != stater, "Stater can't vote");
-        require(msg.sender != questioners[_questionIndex], "questioner can't vote on his own question");
+        require(msg.sender != stater);
+        require(msg.sender != questioners[_questionIndex]);
         
         // if already voted _questionIndex, can't vote again
-        require(hasAlreadyVoted[_questionIndex][msg.sender] != 1, "Cant double vote buddy");
+        require(hasAlreadyVoted[_questionIndex][msg.sender] != 1);
         
         // 1 stater favor (agree answer)
         if (_vote == 1) {
@@ -186,7 +186,7 @@ contract StatementBank {
     // * choose a random ranker who got it right and pay him $0.5
     // [originally 10% of the questioner's stake was the spec]
     function finalizeQuestionerChallenge () public returns (address removedQuestionerAddr) {
-        require(lastQuestioner >= firstQuestioner, "queue must be non-empty");
+        require(lastQuestioner >= firstQuestioner);
         
         // Test still
         // require(msg.sender == address(0xa639cc7A169E848B280acd1B493a7D5Af44507a4)); 
@@ -253,7 +253,7 @@ contract StatementBank {
         // We need a bunch of checks here 
         // All rounds of questions challenges must be done
         // All question challenges finalized
-        require(lastQuestioner == firstQuestioner, "All question challenges should be resolved");
+        require(lastQuestioner == firstQuestioner);
         
         // TODO: implement time waiting requirement
         // The only strict restriction is that enough time like 2 weeks should go on
