@@ -131,7 +131,7 @@ contract StatementBank {
         console.log(">>> [Stater answers] _questionIndex: ", _questionIndex);
         // stater can't signal he already answered a question
         // when a question hasn't been asked yet | mainly checking for existence
-        require(lastQuestioner >= _questionIndex, "question hasn't been asked yet");
+        require(lastQuestioner > _questionIndex, "question hasn't been asked yet");
         
         questionGotAnswer[_questionIndex] = 1;
 
