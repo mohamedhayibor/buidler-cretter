@@ -75,8 +75,6 @@ contract StatementBank {
     constructor() public payable {
         require(msg.value == 0.04 ether);
         stater = msg.sender;
-        firstQuestioner = 0;
-        lastQuestioner = 0;
         // natural unit of time on EVM is seconds
         createdAt = now;
         // 18 days to ask a questions
@@ -264,13 +262,11 @@ contract StatementBank {
         address payable cretterFundAddr = 0x87aD567CE024832E60529e11e70cb3788611F1E8;
         
         cretterFundAddr.transfer(fundCretterFuture);
-        stater.transfer(statementBankBalance() - fundCretterFuture);      
+        stater.transfer(statementBankBalance().sub(fundCretterFuture));      
     }
     
     // Funders can donate and keep statement live
     // for more interaction even after stater withdrawal
     // Reward always goes to stater though (if not drained by questioners)
-    function donateToStatementBank() public payable {
-        
-    }
+    // function donateToStatementBank() public payable {}
 }
