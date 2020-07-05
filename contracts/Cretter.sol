@@ -1,33 +1,6 @@
 pragma solidity ^0.6.8;
 
-library CheckOverflows {
-    function add(uint256 n1, uint256 n2) internal pure returns(uint256 n3) {
-        n3 = n1 + n2;
-        require(n3 >= n1);
-        return n3;
-    }
-
-    function sub(uint256 n1, uint256 n2) internal pure returns(uint256) {
-        require(n2 <= n1);
-        return n1 - n2;
-    }
-
-    function mul(uint256 n1, uint256 n2) internal pure returns(uint256 n3) {
-        if (n1 == 0 || n2 == 0) {
-            return 0;
-        }
-
-        n3 = n1 * n2;
-        require(n3 / n1 == n2);
-        return n3;
-    }
-
-    function div(uint256 n1, uint256 n2) internal pure returns(uint256) {
-        return n1 / n2;
-    }
-}
-
-
+import '@openzeppelin/contracts/math/SafeMath.sol';
 /*
  * This is 1st version of Cretter 2.0
  * $10 (0.04eth) to make a StatementBank
@@ -47,7 +20,7 @@ library CheckOverflows {
 // Scheduler at 30 days kills the contract | to save space on network
 // and gas refund
 contract StatementBank {
-    using CheckOverflows for uint256;
+    using SafeMath for uint256;
 
     address payable public stater; // owner
 
@@ -68,7 +41,7 @@ contract StatementBank {
     // arg: _numberOfVoters number of voters
     // result: starts at zero | 
     function random(uint256 _numberOfVoters) public view returns (uint256) {
-        return uint256(keccak256(abi.encodePacked(block.timestamp, block.difficulty))) % _numberOfVoters;
+        return uint256(keccak256(abi.encodePacked(block.timestamp, block.difficulty))).mod(_numberOfVoters);
     }
 
     // (1): stater posts a statement
@@ -78,8 +51,8 @@ contract StatementBank {
         // natural unit of time on EVM is seconds
         createdAt = now;
         // 18 days to ask a questions
-        questionDeadline = now + 5 minutes;
-        statementTimeLock = now + 10 minutes;
+        questionDeadline = now.add(5 minutes);
+        statementTimeLock = now.add(10 minutes);
     }
 
     // We're using a FIFO data structure, that represents the order of
@@ -228,7 +201,7 @@ contract StatementBank {
             address payable staterRankingWinner = votedForStater[firstQuestioner][staterVoteIndex];
 
             
-            uint256 stateVoterReward = uint256(2000000000000000).sub( uint256(2000000000000000).mul(staterVoteIndex).div(stateLen) );
+            uint256 stateVoterReward = uint256(2000000000000000).sub(uint256(2000000000000000).mul(staterVoteIndex).div(stateLen));
             staterRankingWinner.transfer(stateVoterReward);
         }
         
