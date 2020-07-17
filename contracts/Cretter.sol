@@ -94,6 +94,7 @@ contract StatementBank {
         // when a question hasn't been asked yet | mainly checking for existence
         require(lastQuestioner > _questionIndex);
         
+        // booleans take more space than uint256
         questionGotAnswer[_questionIndex] = 1;
         
         // TODO: disable stater being able to call this function again.
