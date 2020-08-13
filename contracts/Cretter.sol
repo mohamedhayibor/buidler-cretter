@@ -276,3 +276,22 @@ contract Spawner {
     spawnedContract = _spawnCreate2(initCode);
   }
 }
+
+contract StatementFactory is Spawner {
+  function postNewStatement() public returns (address spawnedContract) {
+
+    StatementBank statementLogic = StatementBank(address(0x8eD2d83f1AB596C91095AEd99cDa821f0630933a)); // FIX
+    
+    bytes memory myInitializationCalldata = abi.encodeWithSelector(
+      statementLogic.initialize.selector
+      // ,
+      // "argumentOne",
+      // "argumentTwo"
+    );
+    
+    spawnedContract =  _spawn(
+      address(statementLogic),
+      myInitializationCalldata
+    );
+  }
+}
