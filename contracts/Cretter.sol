@@ -244,3 +244,35 @@ contract StatementBank {
     // Reward always goes to stater though (if not drained by questioners)
     // function donateToStatementBank() public payable {}
 }
+
+/**
+ * @notice This contract spawns and initializes eip-1167 minimal proxies that
+ * point to existing logic contracts. The logic contracts need to have an
+ * intitializer function that should only callable when no contract exists at
+ * their current address (i.e. it is being `DELEGATECALL`ed from a constructor).
+ * https://github.com/0age/Spawner @author 0age
+ */
+contract Spawner {
+  /**
+   * @notice Internal function for spawning an eip-1167 minimal proxy using
+   * `CREATE2`.
+   * @param logicContract address The address of the logic contract.
+   * @param initializationCalldata bytes The calldata that will be supplied to
+   * the `DELEGATECALL` from the spawned contract to the logic contract during
+   * contract creation.
+   * @return The address of the newly-spawned contract.
+   */
+  function _spawn(
+    address logicContract,
+    bytes memory initializationCalldata
+  ) internal returns (address spawnedContract) {
+    // place creation code and constructor args of contract to spawn in memory.
+    bytes memory initCode = abi.encodePacked(
+      type(Spawn).creationCode,
+      abi.encode(logicContract, initializationCalldata)
+    );
+
+    // spawn the contract using `CREATE2`.
+    spawnedContract = _spawnCreate2(initCode);
+  }
+}
