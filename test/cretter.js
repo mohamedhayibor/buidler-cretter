@@ -7,11 +7,17 @@ const eth = require("ethers");
 
 describe("Token contract", function() {
   let StatementBank;
+  let StatementFactory;
   let statement;
   let owner, addr1, addr2, addr3, addrs;
 
   before(async function () {
     StatementBank = await ethers.getContractFactory("StatementBank")
+
+    // console.log(StatementBank);
+
+    StatementFactory = await ethers.getContractFactory("StatementBankFactory");
+
 
     it("If user did not send 0.04 eth to fund the statement, tx must fail", async function () {
       statement = await StatementBank.deploy();

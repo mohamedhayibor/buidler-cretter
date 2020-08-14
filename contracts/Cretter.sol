@@ -554,9 +554,9 @@ contract Spawner {
 }
 
 contract StatementFactory is Spawner {
-  function postNewStatement() public returns (address spawnedContract) {
+  function postNewStatement(address _statementBankLogicAdrr) public returns (address spawnedContract) {
 
-    StatementBank statementLogic = StatementBank(address(0x8eD2d83f1AB596C91095AEd99cDa821f0630933a)); // FIX
+    StatementBank statementLogic = StatementBank(_statementBankLogicAdrr);
     
     bytes memory myInitializationCalldata = abi.encodeWithSelector(
       statementLogic.initialize.selector
