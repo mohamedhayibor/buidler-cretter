@@ -193,33 +193,4 @@ describe("Token contract", function() {
 
     await statement.staterReceivesLoot();
   });
-
-/*
-  it("Stater receives whatever is left", async function () {
-    await statement.connect(addr1).questionerStake({ value: eth.utils.parseEther("0.004") });
-    await statement.connect(addr2).questionerStake({ value: eth.utils.parseEther("0.004") });
-
-    await statement.staterProvidesAnswer(0);
-    await statement.staterProvidesAnswer(1);
-
-    await statement.connect(addr3).vote(0, 2);
-    await statement.connect(addr2).vote(0, 2);
-
-
-    await statement.finalizeQuestionerChallenge();
-
-    await statement.connect(addr3).vote(1, 2);
-    await statement.connect(addr2).vote(1, 2);
-
-    await statement.finalizeQuestionerChallenge();
-
-    // let cretterFundAddr = "0x87aD567CE024832E60529e11e70cb3788611F1E8";
-
-    // expect( () => statement.staterReceivesLoot().catch(err => err) ).to.changeBalance(cretterFundAddr, "4000000000000000");
-
-    // await statement.connect(addr1).vote(1, 2);
-    // await statement.connect(addr3).vote(1, 2);
-  });
-
-*/
 });
