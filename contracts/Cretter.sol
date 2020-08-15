@@ -549,7 +549,7 @@ contract Spawner {
     require(
       uint160(logicContract) <= 0xffffffffffffffffffffffffffffff,
       "Logic contract address must start with at least five zero bytes."
-    );    
+    );
   }  
 }
 
