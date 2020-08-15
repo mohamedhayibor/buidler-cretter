@@ -15,7 +15,7 @@ describe("Token contract", function() {
   let currentStatementAddress;
 
   before(async function () {
-    console.log("Dived into before")
+    // console.log("Dived into before")
 
     StatementBank = await ethers.getContractFactory("StatementBank");
 
@@ -23,7 +23,7 @@ describe("Token contract", function() {
 
     StatementFactory = await ethers.getContractFactory("StatementFactory");
 
-    console.log("Dived into before --- [END]");
+    // console.log("Dived into before --- [END]");
     // it("If user did not send 0.04 eth to fund the statement, tx must fail", async function () {
     //   statement = await StatementBank.deploy();
     //   expect( await statement.deployed() ).to.be.revertedWith("Fund statement");
@@ -33,25 +33,31 @@ describe("Token contract", function() {
   beforeEach(async function() {
     statement = await StatementBank.deploy(); // { value: eth.utils.parseEther("0.04") })
 
-    console.log("Dived into beforeEach");
-
     await statement.deployed();
 
     currentStatementAddress = statement.address;
 
     console.log("Statement deployed to: ", currentStatementAddress);
 
-    statementContractFactory = await StatementFactory.deploy();
+    statementContractFactory = await StatementFactory.deploy(currentStatementAddress);
 
     await statementContractFactory.deployed();
+
+    console.log("statementContractFactory: ", statementContractFactory.address);
 
     [owner, addr1, addr2, addr3, addr4] = await ethers.getSigners();
   })
 
-  it("Stater can't ask question", async function () {
+  it("Post new statement as clone", async function () {
     console.log("Hit first Unit test!!!!!!");
 
+    let cloneAddress = await statementContractFactory.postNewStatement({ value: eth.utils.parseEther("0.04") });
+    
+
     console.log(">> currentStatementAddress: ", currentStatementAddress);
+
+    console.log(">> clone address: ", cloneAddress);
+
     // await expect(statement.questionerStake({ value: eth.utils.parseEther("0.004") }) ).to.be.reverted;
   });
 
