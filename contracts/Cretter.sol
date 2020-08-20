@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.6.8;
+pragma solidity ^0.7.0;
 
 // From https://github.com/OpenZeppelin/openzeppelin-contracts
 library SafeMath {
@@ -59,10 +59,7 @@ library SafeMath {
 
 // see comments at https://github.com/0age/Spawner
 contract Spawn {
-  constructor(
-    address logicContract,
-    bytes memory initializationCalldata
-  ) public payable {
+  constructor(address logicContract, bytes memory initializationCalldata) {
     // delegatecall into the logic contract to perform initialization.
     (bool ok, ) = logicContract.delegatecall(initializationCalldata);
     if (!ok) {
@@ -88,10 +85,7 @@ contract Spawn {
 }
 
 contract SpawnCompact {
-  constructor(
-    address logicContract,
-    bytes memory initializationCalldata
-  ) public payable {
+  constructor(address logicContract, bytes memory initializationCalldata) {
     // delegatecall into the logic contract to perform initialization.
     (bool ok, ) = logicContract.delegatecall(initializationCalldata);
     if (!ok) {
@@ -117,10 +111,7 @@ contract SpawnCompact {
 }
 
 contract Spawner {
-  function _spawn(
-    address logicContract,
-    bytes memory initializationCalldata
-  ) internal returns (address spawnedContract) {
+  function _spawn(address logicContract, bytes memory initializationCalldata) internal returns (address spawnedContract) {
     // place creation code and constructor args of contract to spawn in memory.
     bytes memory initCode = abi.encodePacked(
       type(Spawn).creationCode,
@@ -131,10 +122,7 @@ contract Spawner {
     spawnedContract = _spawnCreate2(initCode);
   }
 
-  function _spawnCompact(
-    address compactLogicContract,
-    bytes memory initializationCalldata
-  ) internal returns (address spawnedContract) {
+  function _spawnCompact(address compactLogicContract, bytes memory initializationCalldata) internal returns (address spawnedContract) {
     // ensure that the address is sufficiently compact.
     _ensureCompact(compactLogicContract);
 
@@ -148,10 +136,7 @@ contract Spawner {
     spawnedContract = _spawnCreate2(initCode);
   }
 
-  function _spawnOldSchool(
-    address logicContract,
-    bytes memory initializationCalldata
-  ) internal returns (address spawnedContract) {
+  function _spawnOldSchool(address logicContract, bytes memory initializationCalldata) internal returns (address spawnedContract) {
     // place creation code and constructor args of contract to spawn in memory.
     bytes memory initCode = abi.encodePacked(
       type(Spawn).creationCode,
@@ -162,10 +147,7 @@ contract Spawner {
     spawnedContract = _spawnCreate(initCode);
   }
 
-  function _spawnCompactOldSchool(
-    address compactLogicContract,
-    bytes memory initializationCalldata
-  ) internal returns (address spawnedContract) {
+  function _spawnCompactOldSchool(address compactLogicContract, bytes memory initializationCalldata) internal returns (address spawnedContract) {
     // ensure that the address is sufficiently compact.
     _ensureCompact(compactLogicContract);
 
@@ -180,10 +162,7 @@ contract Spawner {
   }
 
   
-  function _computeNextAddress(
-    address logicContract,
-    bytes memory initializationCalldata
-  ) internal view returns (address target) {
+  function _computeNextAddress(address logicContract, bytes memory initializationCalldata) internal view returns (address target) {
     // place creation code and constructor args of contract to spawn in memory.
     bytes memory initCode = abi.encodePacked(
       type(Spawn).creationCode,
@@ -194,10 +173,7 @@ contract Spawner {
     (, target) = _getSaltAndTarget(initCode);
   }
 
-  function _computeNextCompactAddress(
-    address compactLogicContract,
-    bytes memory initializationCalldata
-  ) internal view returns (address target) {
+  function _computeNextCompactAddress(address compactLogicContract, bytes memory initializationCalldata) internal view returns (address target) {
     // ensure that the address is sufficiently compact.
     _ensureCompact(compactLogicContract);
 
@@ -211,9 +187,7 @@ contract Spawner {
     (, target) = _getSaltAndTarget(initCode);
   }
 
-  function _spawnCreate(
-    bytes memory initCode
-  ) private returns (address spawnedContract) {
+  function _spawnCreate(bytes memory initCode) private returns (address spawnedContract) {
     assembly {
       let encoded_data := add(0x20, initCode) // load initialization code.
       let encoded_size := mload(initCode)     // load the init code's length.
@@ -231,9 +205,7 @@ contract Spawner {
     }
   }
 
-  function _spawnCreate2(
-    bytes memory initCode
-  ) private returns (address spawnedContract) {
+  function _spawnCreate2(bytes memory initCode) private returns (address spawnedContract) {
     // get salt to use during deployment using the supplied initialization code.
     (bytes32 salt, ) = _getSaltAndTarget(initCode);
 
@@ -255,9 +227,7 @@ contract Spawner {
     }
   }
 
-  function _getSaltAndTarget(
-    bytes memory initCode
-  ) private view returns (bytes32 salt, address target) {
+  function _getSaltAndTarget(bytes memory initCode) private view returns (bytes32 salt, address target) {
     // get the keccak256 hash of the init code for address derivation.
     bytes32 initCodeHash = keccak256(initCode);
 
@@ -352,15 +322,15 @@ contract StatementBank {
     }
 
     // (1): stater posts a statement
-    function initialize() public {
+    function initialize() external {
         // payable
         // require(msg.value == 0.04 ether);
         stater = msg.sender;
         // natural unit of time on EVM is seconds
-        createdAt = now;
+        createdAt = block.timestamp;
         // 18 days to ask a questions
-        questionDeadline = now.add(5 minutes);
-        statementTimeLock = now.add(10 minutes);
+        questionDeadline = block.timestamp.add(5 minutes);
+        statementTimeLock = block.timestamp.add(10 minutes);
     }
 
     // We're using a FIFO data structure, that represents the order of
@@ -379,7 +349,7 @@ contract StatementBank {
     // The more money in the contract (and less true), the more likely a questionerStake
     function questionerStake() payable public {
         // should be called before deadline
-        require(questionDeadline > now);
+        require(questionDeadline > block.timestamp);
         require(msg.value == 0.004 ether);
         require(stater != msg.sender);
         lastQuestioner = lastQuestioner.add(1);
@@ -528,7 +498,7 @@ contract StatementBank {
         // require(msg.sender == address(0xa639cc7A169E848B280acd1B493a7D5Af44507a4));
         // should be called after deadline
 
-        require(now > statementTimeLock);
+        require(block.timestamp > statementTimeLock);
 
         
         // We need a bunch of checks here 
@@ -557,14 +527,17 @@ contract StatementFactory is Spawner {
 
   address public logicContractAddress;
 
-  constructor(address _statementBankLogicAdrr) public {
+  constructor(address _statementBankLogicAdrr) {
     logicContractAddress = _statementBankLogicAdrr;
   }
 
   function postNewStatement() public payable returns (address spawnedContract) {
 
-    require(msg.value == 0.04 ether);
+    // > increased the statement stake to 0.22 eth
+    // require(msg.value == 0.22 ether, "Not enough money, try 0.22");
     StatementBank statementLogic = StatementBank(logicContractAddress);
+
+    // console.log("[postNewStatement] logicContractAddress: ", logicContractAddress);
     
     bytes memory myInitializationCalldata = abi.encodeWithSelector(
       statementLogic.initialize.selector
@@ -577,5 +550,7 @@ contract StatementFactory is Spawner {
       address(statementLogic),
       myInitializationCalldata
     );
+
+    // console.log("[postNewStatement] spawnedContract: ", spawnedContract);
   }
 }

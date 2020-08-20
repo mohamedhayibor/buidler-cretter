@@ -51,12 +51,19 @@ describe("Token contract", function() {
   it("Post new statement as clone", async function () {
     console.log("Hit first Unit test!!!!!!");
 
-    let cloneAddress = await statementContractFactory.postNewStatement({ value: eth.utils.parseEther("0.04") });
+    let cloneAddress = statementContractFactory.connect(addr1).postNewStatement({ value: eth.utils.parseEther("0.22") }); // ();
+    // ({ value: eth.utils.parseEther("0.22") });
     
+    await cloneAddress;
+    
+    // console.log("Clone Address: ", cloneAddress.address)
+    // console.log("Clone Address Data: ", cloneAddress)
 
-    console.log(">> currentStatementAddress: ", currentStatementAddress);
+    // cloneAddress.connect(addr2).questionerStake({ value: eth.utils.parseEther("0.004") });
 
-    console.log(">> clone address: ", cloneAddress);
+    // console.log(">> currentStatementAddress: ", currentStatementAddress);
+
+    // console.log(">> clone address: ", cloneAddress.address);
 
     // await expect(statement.questionerStake({ value: eth.utils.parseEther("0.004") }) ).to.be.reverted;
   });
