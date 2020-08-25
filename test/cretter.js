@@ -1,70 +1,44 @@
 const { expect } = require("chai");
-
 const { ethers } = require("@nomiclabs/buidler");
-
 const eth = require("ethers");
 
 
 describe("Token contract", function() {
-  let StatementBank;
-  let StatementFactory;
-  let statement;
+  let StatementBankContract;
+  let CretterFactoryContract;
+  let statementBankDeploy;
   let owner, addr1, addr2, addr3, addr4;
-
-  let statementContractFactory;
+  let statementFactoryDeploy;
   let currentStatementAddress;
 
   before(async function () {
-    // console.log("Dived into before")
-
-    StatementBank = await ethers.getContractFactory("StatementBank");
-
-    // console.log(">>> Address: ", StatementBank.linkReferences);
-
-    StatementFactory = await ethers.getContractFactory("StatementFactory");
-
-    // console.log("Dived into before --- [END]");
-    // it("If user did not send 0.04 eth to fund the statement, tx must fail", async function () {
-    //   statement = await StatementBank.deploy();
-    //   expect( await statement.deployed() ).to.be.revertedWith("Fund statement");
-    // });
+    StatementBankContract = await ethers.getContractFactory("StatementBank");
+    CretterFactoryContract = await ethers.getContractFactory("StatementFactory");
   })
 
   beforeEach(async function() {
-    statement = await StatementBank.deploy(); // { value: eth.utils.parseEther("0.04") })
-
-    await statement.deployed();
-
-    currentStatementAddress = statement.address;
-
+    statementBankDeploy = await StatementBankContract.deploy();
+    await statementBankDeploy.deployed();
+    currentStatementAddress = statementBankDeploy.address;
     console.log("Statement deployed to: ", currentStatementAddress);
 
-    statementContractFactory = await StatementFactory.deploy(currentStatementAddress);
-
-    await statementContractFactory.deployed();
-
-    console.log("statementContractFactory: ", statementContractFactory.address);
-
+    statementFactoryDeploy = await CretterFactoryContract.deploy(currentStatementAddress);
+    await statementFactoryDeploy.deployed();
+    console.log("statementContractFactory: ", statementFactoryDeploy.address);
     [owner, addr1, addr2, addr3, addr4] = await ethers.getSigners();
   })
 
   it("Post new statement as clone", async function () {
     console.log("Hit first Unit test!!!!!!");
-
-    let cloneAddress = statementContractFactory.connect(addr1).postNewStatement({ value: eth.utils.parseEther("0.22") }); // ();
+    // let cloneAddress = statementContractFactory.connect(addr1).postNewStatement({ value: eth.utils.parseEther("0.22") }); // ();
+    let cloneAddress = statementFactoryDeploy.connect(addr1).postNewStatement(); // ();
     // ({ value: eth.utils.parseEther("0.22") });
-    
     await cloneAddress;
-    
     // console.log("Clone Address: ", cloneAddress.address)
     // console.log("Clone Address Data: ", cloneAddress)
-
     // cloneAddress.connect(addr2).questionerStake({ value: eth.utils.parseEther("0.004") });
-
     // console.log(">> currentStatementAddress: ", currentStatementAddress);
-
     // console.log(">> clone address: ", cloneAddress.address);
-
     // await expect(statement.questionerStake({ value: eth.utils.parseEther("0.004") }) ).to.be.reverted;
   });
 

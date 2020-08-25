@@ -59,7 +59,7 @@ library SafeMath {
 
 // see comments at https://github.com/0age/Spawner
 contract Spawn {
-  constructor(address logicContract, bytes memory initializationCalldata) {
+  constructor(address logicContract, bytes memory initializationCalldata) payable {
     // delegatecall into the logic contract to perform initialization.
     (bool ok, ) = logicContract.delegatecall(initializationCalldata);
     if (!ok) {
@@ -85,7 +85,7 @@ contract Spawn {
 }
 
 contract SpawnCompact {
-  constructor(address logicContract, bytes memory initializationCalldata) {
+  constructor(address logicContract, bytes memory initializationCalldata) payable {
     // delegatecall into the logic contract to perform initialization.
     (bool ok, ) = logicContract.delegatecall(initializationCalldata);
     if (!ok) {
