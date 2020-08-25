@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.7.0;
 
+import "@nomiclabs/buidler/console.sol";
+
 // From https://github.com/OpenZeppelin/openzeppelin-contracts
 library SafeMath {
     function add(uint256 a, uint256 b) internal pure returns (uint256) {
@@ -57,225 +59,18 @@ library SafeMath {
     }
 }
 
-// see comments at https://github.com/0age/Spawner
-contract Spawn {
-  constructor(address logicContract, bytes memory initializationCalldata) payable {
-    // delegatecall into the logic contract to perform initialization.
-    (bool ok, ) = logicContract.delegatecall(initializationCalldata);
-    if (!ok) {
-      // pass along failure message from delegatecall and revert.
-      assembly {
-        returndatacopy(0, 0, returndatasize())
-        revert(0, returndatasize())
-      }
-    }
+contract CloneFactory {
 
-    // place eip-1167 runtime code in memory.
-    bytes memory runtimeCode = abi.encodePacked(
-      bytes10(0x363d3d373d3d3d363d73),
-      logicContract,
-      bytes15(0x5af43d82803e903d91602b57fd5bf3)
-    );
-
-    // return eip-1167 code to write it to spawned contract runtime.
+  function createClone(address target) internal returns (address result) {
+    bytes20 targetBytes = bytes20(target);
     assembly {
-      return(add(0x20, runtimeCode), 45) // eip-1167 runtime code, length
+      let clone := mload(0x40)
+      mstore(clone, 0x3d602d80600a3d3981f3363d3d373d3d3d363d73000000000000000000000000)
+      mstore(add(clone, 0x14), targetBytes)
+      mstore(add(clone, 0x28), 0x5af43d82803e903d91602b57fd5bf30000000000000000000000000000000000)
+      result := create(0, clone, 0x37)
     }
   }
-}
-
-contract SpawnCompact {
-  constructor(address logicContract, bytes memory initializationCalldata) payable {
-    // delegatecall into the logic contract to perform initialization.
-    (bool ok, ) = logicContract.delegatecall(initializationCalldata);
-    if (!ok) {
-      // pass along failure message from delegatecall and revert.
-      assembly {
-        returndatacopy(0, 0, returndatasize())
-        revert(0, returndatasize())
-      }
-    }
-
-    // place eip-1167 runtime code in memory.
-    bytes memory runtimeCode = abi.encodePacked(
-      bytes10(0x363d3d373d3d3d363d6e),
-      uint120(uint160(logicContract)),
-      bytes15(0x5af43d82803e903d91602b57fd5bf3)
-    );
-
-    // return eip-1167 code to write it to spawned contract runtime.
-    assembly {
-      return(add(0x20, runtimeCode), 40) // eip-1167 runtime code, length
-    }
-  }
-}
-
-contract Spawner {
-  function _spawn(address logicContract, bytes memory initializationCalldata) internal returns (address spawnedContract) {
-    // place creation code and constructor args of contract to spawn in memory.
-    bytes memory initCode = abi.encodePacked(
-      type(Spawn).creationCode,
-      abi.encode(logicContract, initializationCalldata)
-    );
-
-    // spawn the contract using `CREATE2`.
-    spawnedContract = _spawnCreate2(initCode);
-  }
-
-  function _spawnCompact(address compactLogicContract, bytes memory initializationCalldata) internal returns (address spawnedContract) {
-    // ensure that the address is sufficiently compact.
-    _ensureCompact(compactLogicContract);
-
-    // place creation code and constructor args of contract to spawn in memory.
-    bytes memory initCode = abi.encodePacked(
-      type(SpawnCompact).creationCode,
-      abi.encode(compactLogicContract, initializationCalldata)
-    );
-
-    // spawn the contract using `CREATE2`.
-    spawnedContract = _spawnCreate2(initCode);
-  }
-
-  function _spawnOldSchool(address logicContract, bytes memory initializationCalldata) internal returns (address spawnedContract) {
-    // place creation code and constructor args of contract to spawn in memory.
-    bytes memory initCode = abi.encodePacked(
-      type(Spawn).creationCode,
-      abi.encode(logicContract, initializationCalldata)
-    );
-
-    // spawn the contract using `CREATE`.
-    spawnedContract = _spawnCreate(initCode);
-  }
-
-  function _spawnCompactOldSchool(address compactLogicContract, bytes memory initializationCalldata) internal returns (address spawnedContract) {
-    // ensure that the address is sufficiently compact.
-    _ensureCompact(compactLogicContract);
-
-    // place creation code and constructor args of contract to spawn in memory.
-    bytes memory initCode = abi.encodePacked(
-      type(SpawnCompact).creationCode,
-      abi.encode(compactLogicContract, initializationCalldata)
-    );
-
-    // spawn the contract using `CREATE`.
-    spawnedContract = _spawnCreate(initCode);
-  }
-
-  
-  function _computeNextAddress(address logicContract, bytes memory initializationCalldata) internal view returns (address target) {
-    // place creation code and constructor args of contract to spawn in memory.
-    bytes memory initCode = abi.encodePacked(
-      type(Spawn).creationCode,
-      abi.encode(logicContract, initializationCalldata)
-    );
-
-    // get target address using the constructed initialization code.
-    (, target) = _getSaltAndTarget(initCode);
-  }
-
-  function _computeNextCompactAddress(address compactLogicContract, bytes memory initializationCalldata) internal view returns (address target) {
-    // ensure that the address is sufficiently compact.
-    _ensureCompact(compactLogicContract);
-
-    // place creation code and constructor args of contract to spawn in memory.
-    bytes memory initCode = abi.encodePacked(
-      type(SpawnCompact).creationCode,
-      abi.encode(compactLogicContract, initializationCalldata)
-    );
-
-    // get target address using the constructed initialization code.
-    (, target) = _getSaltAndTarget(initCode);
-  }
-
-  function _spawnCreate(bytes memory initCode) private returns (address spawnedContract) {
-    assembly {
-      let encoded_data := add(0x20, initCode) // load initialization code.
-      let encoded_size := mload(initCode)     // load the init code's length.
-      spawnedContract := create(              // call `CREATE` with 3 arguments.
-        callvalue(),                            // forward any supplied endowment.
-        encoded_data,                         // pass in initialization code.
-        encoded_size                          // pass in init code's length.
-      )
-
-      // pass along failure message from failed contract deployment and revert.
-      if iszero(spawnedContract) {
-        returndatacopy(0, 0, returndatasize())
-        revert(0, returndatasize())
-      }
-    }
-  }
-
-  function _spawnCreate2(bytes memory initCode) private returns (address spawnedContract) {
-    // get salt to use during deployment using the supplied initialization code.
-    (bytes32 salt, ) = _getSaltAndTarget(initCode);
-
-    assembly {
-      let encoded_data := add(0x20, initCode) // load initialization code.
-      let encoded_size := mload(initCode)     // load the init code's length.
-      spawnedContract := create2(             // call `CREATE2` w/ 4 arguments.
-        callvalue(),                            // forward any supplied endowment.
-        encoded_data,                         // pass in initialization code.
-        encoded_size,                         // pass in init code's length.
-        salt                                  // pass in the salt value.
-      )
-
-      // pass along failure message from failed contract deployment and revert.
-      if iszero(spawnedContract) {
-        returndatacopy(0, 0, returndatasize())
-        revert(0, returndatasize())
-      }
-    }
-  }
-
-  function _getSaltAndTarget(bytes memory initCode) private view returns (bytes32 salt, address target) {
-    // get the keccak256 hash of the init code for address derivation.
-    bytes32 initCodeHash = keccak256(initCode);
-
-    // set the initial nonce to be provided when constructing the salt.
-    uint256 nonce = 0;
-    
-    // declare variable for code size of derived address.
-    uint256 codeSize;
-
-    while (true) {
-      // derive `CREATE2` salt using `msg.sender` and nonce.
-      salt = keccak256(abi.encodePacked(msg.sender, nonce));
-
-      target = address(    // derive the target deployment address.
-        uint160(                   // downcast to match the address type.
-          uint256(                 // cast to uint to truncate upper digits.
-            keccak256(             // compute CREATE2 hash using 4 inputs.
-              abi.encodePacked(    // pack all inputs to the hash together.
-                bytes1(0xff),      // pass in the control character.
-                address(this),     // pass in the address of this contract.
-                salt,              // pass in the salt from above.
-                initCodeHash       // pass in hash of contract creation code.
-              )
-            )
-          )
-        )
-      );
-
-      // determine if a contract is already deployed to the target address.
-      assembly { codeSize := extcodesize(target) }
-
-      // exit the loop if no contract is deployed to the target address.
-      if (codeSize == 0) {
-        break;
-      }
-
-      // otherwise, increment the nonce and derive a new salt.
-      nonce++;
-    }   
-  }   
-
-  function _ensureCompact(address logicContract) private pure {
-    // ensure that the address is sufficiently compact.
-    require(
-      uint160(logicContract) <= 0xffffffffffffffffffffffffffffff,
-      "Logic contract address must start with at least five zero bytes."
-    );
-  }  
 }
 
 /*
@@ -523,7 +318,11 @@ contract StatementBank {
     // function donateToStatementBank() public payable {}
 }
 
-contract StatementFactory is Spawner {
+contract StatementFactory is CloneFactory {
+
+//   StatementBank[] public statementAddresses;
+
+//   event NewStatementCreated(StatementBank newStatement);
 
   address public logicContractAddress;
 
@@ -533,23 +332,34 @@ contract StatementFactory is Spawner {
 
   function postNewStatement() public payable returns (address spawnedContract) {
 
-    // > increased the statement stake to 0.22 eth
-    // require(msg.value == 0.22 ether, "Not enough money, try 0.22");
-    StatementBank statementLogic = StatementBank(logicContractAddress);
+    address statementClone = createClone(logicContractAddress);
 
-    // console.log("[postNewStatement] logicContractAddress: ", logicContractAddress);
+    spawnedContract = statementClone;
+
+    console.log(">> postNewStatement(): ", statementClone);
+
+    // spawnedContract = Statement(statementClone).initialize();
+
+
+
+
+    // // > increased the statement stake to 0.22 eth
+    // // require(msg.value == 0.22 ether, "Not enough money, try 0.22");
+    // StatementBank statementLogic = StatementBank(logicContractAddress);
+
+    // // console.log("[postNewStatement] logicContractAddress: ", logicContractAddress);
     
-    bytes memory myInitializationCalldata = abi.encodeWithSelector(
-      statementLogic.initialize.selector
-      // ,
-      // "argumentOne",
-      // "argumentTwo"
-    );
+    // bytes memory myInitializationCalldata = abi.encodeWithSelector(
+    //   statementLogic.initialize.selector
+    //   // ,
+    //   // "argumentOne",
+    //   // "argumentTwo"
+    // );
     
-    spawnedContract =  _spawn(
-      address(statementLogic),
-      myInitializationCalldata
-    );
+    // spawnedContract =  _spawn(
+    //   address(statementLogic),
+    //   myInitializationCalldata
+    // );
 
     // console.log("[postNewStatement] spawnedContract: ", spawnedContract);
   }
