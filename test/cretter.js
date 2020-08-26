@@ -29,7 +29,8 @@ describe("Token contract", function() {
     console.log("statementContractFactory: ", statementFactoryDeploy.address);
     [owner, addr1, addr2, addr3, addr4] = await ethers.getSigners();
   
-  })
+  });
+
 
   it("Post new statement as clone", async function () {
     console.log("Hit first Unit test!!!!!!");
@@ -59,7 +60,21 @@ describe("Token contract", function() {
     // ***********/
   });
 
+
+
   /*
+  it("Depositing 0.1 eth into clone contract", async function () {
+    // Fire newStatementClone
+    await statementFactoryDeploy.postNewStatement({ value: eth.utils.parseEther("0.22") });
+
+    // console.log(newStatementClone)
+    let newStatementCloneInstance = StatementBankContract.attach("0xc451eb00627adfa5880868eda62493466c5bafbd");
+
+    await newStatementCloneInstance.deposit({ value: eth.utils.parseEther("0.1") });
+
+    expect((await newStatementCloneInstance.statementBankBalance()).toString()).to.equal("100000000000000000");
+  })
+
   it("Any amount different than 0.004 eth stake will fail to ask question", async function () {
     let stakeWrongAmount = statement.connect(addr1).questionerStake({ value: eth.utils.parseEther("0.008") });
     await expect(stakeWrongAmount).to.be.reverted;
