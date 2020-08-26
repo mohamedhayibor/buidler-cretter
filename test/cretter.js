@@ -19,33 +19,53 @@ describe("Token contract", function() {
   beforeEach(async function() {
     statementBankDeploy = await StatementBankContract.deploy();
     await statementBankDeploy.deployed();
+
     currentStatementAddress = statementBankDeploy.address;
+
     console.log("Statement deployed to: ", currentStatementAddress);
 
     statementFactoryDeploy = await CretterFactoryContract.deploy(currentStatementAddress);
     await statementFactoryDeploy.deployed();
     console.log("statementContractFactory: ", statementFactoryDeploy.address);
     [owner, addr1, addr2, addr3, addr4] = await ethers.getSigners();
+  
   })
 
   it("Post new statement as clone", async function () {
     console.log("Hit first Unit test!!!!!!");
-    // let cloneAddress = statementContractFactory.connect(addr1).postNewStatement({ value: eth.utils.parseEther("0.22") }); // ();
-    let cloneAddress = statementFactoryDeploy.connect(addr1).postNewStatement(); // ();
-    // ({ value: eth.utils.parseEther("0.22") });
-    await cloneAddress;
-    // console.log("Clone Address: ", cloneAddress.address)
-    // console.log("Clone Address Data: ", cloneAddress)
-    // cloneAddress.connect(addr2).questionerStake({ value: eth.utils.parseEther("0.004") });
-    // console.log(">> currentStatementAddress: ", currentStatementAddress);
-    // console.log(">> clone address: ", cloneAddress.address);
-    // await expect(statement.questionerStake({ value: eth.utils.parseEther("0.004") }) ).to.be.reverted;
+    
+    // Fire newStatementClone
+    await statementFactoryDeploy.postNewStatement({ value: eth.utils.parseEther("0.22") });
+
+    // console.log(newStatementClone)
+    let newStatementCloneInstance = StatementBankContract.attach("0xc451eb00627adfa5880868eda62493466c5bafbd")
+
+    // check main contract
+    let statementLogicInstance = StatementBankContract.attach("0x7c2C195CD6D34B8F845992d380aADB2730bB9C6F")
+
+    // check
+    let factoryInstance = CretterFactoryContract.attach("0x8858eeB3DfffA017D4BCE9801D340D36Cf895CCf")
+
+
+    console.log(await newStatementCloneInstance.statementBankBalance())
+    console.log(await statementLogicInstance.statementBankBalance())
+    console.log(await factoryInstance.statementBankBalance())
+    
+    // check all balances
+    /*
+    [statementLogicInstance, newStatementCloneInstance].forEach(async (instance, index) => {
+      let balance = await instance.statementBankBalance();
+
+      console.log(index, ", ", balance)
+    })
+    */
   });
 
   /*
   it("Any amount different than 0.004 eth stake will fail to ask question", async function () {
     let stakeWrongAmount = statement.connect(addr1).questionerStake({ value: eth.utils.parseEther("0.008") });
     await expect(stakeWrongAmount).to.be.reverted;
+    // let newStatementClone = await statementFactoryDeploy.connect(addr1).postNewStatement({ value: eth.utils.parseEther("0.22") }); // ();
   });
 
   it("Stater should NOT be able to signal answer, when question is not already asked", async function() {

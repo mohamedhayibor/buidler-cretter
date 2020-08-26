@@ -320,47 +320,32 @@ contract StatementBank {
 
 contract StatementFactory is CloneFactory {
 
-//   StatementBank[] public statementAddresses;
+   //StatementBank[] public statementAddresses;
 
-//   event NewStatementCreated(StatementBank newStatement);
+  event NewStatementCreated(address newStatement);
 
-  address public logicContractAddress;
+  address payable public logicContractAddress;
 
-  constructor(address _statementBankLogicAdrr) {
+  constructor(address payable _statementBankLogicAdrr) {
     logicContractAddress = _statementBankLogicAdrr;
   }
 
-  function postNewStatement() public payable returns (address spawnedContract) {
+  function postNewStatement() public payable returns (address payable spawnedContract) {
 
-    address statementClone = createClone(logicContractAddress);
+    require(msg.value == 0.22 ether, "Not enough money, try 0.22");
+    spawnedContract = createClone(logicContractAddress);
 
-    spawnedContract = statementClone;
+    spawnedContract.transfer(msg.value);
+    // proof of execution
+    emit NewStatementCreated(spawnedContract);
 
-    console.log(">> postNewStatement(): ", statementClone);
+    console.log(">> postNewStatement(): ", spawnedContract);
 
-    // spawnedContract = Statement(statementClone).initialize();
+    // spawnedContract = Statement(spawnedContract).initialize();
+  }
 
-
-
-
-    // // > increased the statement stake to 0.22 eth
-    // // require(msg.value == 0.22 ether, "Not enough money, try 0.22");
-    // StatementBank statementLogic = StatementBank(logicContractAddress);
-
-    // // console.log("[postNewStatement] logicContractAddress: ", logicContractAddress);
-    
-    // bytes memory myInitializationCalldata = abi.encodeWithSelector(
-    //   statementLogic.initialize.selector
-    //   // ,
-    //   // "argumentOne",
-    //   // "argumentTwo"
-    // );
-    
-    // spawnedContract =  _spawn(
-    //   address(statementLogic),
-    //   myInitializationCalldata
-    // );
-
-    // console.log("[postNewStatement] spawnedContract: ", spawnedContract);
+    // testing purposes
+  function statementBankBalance() public view returns (uint256) {
+    return address(this).balance;
   }
 }
