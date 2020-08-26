@@ -6,57 +6,64 @@ const eth = require("ethers");
 describe("Token contract", function() {
   let StatementBankContract;
   let CretterFactoryContract;
-  let statementBankDeploy;
-  let owner, addr1, addr2, addr3, addr4;
+
+  let statementLogicDeploy;
   let statementFactoryDeploy;
+  
+  let owner, addr1, addr2, addr3, addr4;
   let currentStatementAddress;
 
-  before(async function () {
-    StatementBankContract = await ethers.getContractFactory("StatementBank");
-    CretterFactoryContract = await ethers.getContractFactory("StatementFactory");
-  })
+  let statement;
+
+  // before(async function () {
+  //   StatementBankContract = await ethers.getContractFactory("StatementBank");
+  //   CretterFactoryContract = await ethers.getContractFactory("StatementFactory");
+  // })
 
   beforeEach(async function() {
-    statementBankDeploy = await StatementBankContract.deploy();
-    await statementBankDeploy.deployed();
+    StatementBankContract = await ethers.getContractFactory("StatementBank");
+    CretterFactoryContract = await ethers.getContractFactory("StatementFactory");
 
-    currentStatementAddress = statementBankDeploy.address;
+    statementLogicDeploy = await StatementBankContract.deploy();
+    await statementLogicDeploy.deployed();
 
-    console.log("Statement deployed to: ", currentStatementAddress);
+    currentStatementAddress = statementLogicDeploy.address;
+    console.log("Statement Logic deployed to: ", currentStatementAddress);
 
     statementFactoryDeploy = await CretterFactoryContract.deploy(currentStatementAddress);
     await statementFactoryDeploy.deployed();
+
     console.log("statementContractFactory: ", statementFactoryDeploy.address);
     [owner, addr1, addr2, addr3, addr4] = await ethers.getSigners();
-  
+
+
+    // Fire newStatementClone
+    await statementFactoryDeploy.postNewStatement();
+
+    // console.log(newStatementClone)
+    statement = StatementBankContract.attach("0xc451eb00627adfa5880868eda62493466c5bafbd")
+
+    // check main contract
+    // let statementLogicInstance = StatementBankContract.attach("0x7c2C195CD6D34B8F845992d380aADB2730bB9C6F")
+
+    // check
+    // let factoryInstance = CretterFactoryContract.attach("0x8858eeB3DfffA017D4BCE9801D340D36Cf895CCf")
+
   });
 
 
   it("Post new statement as clone", async function () {
     console.log("Hit first Unit test!!!!!!");
-    
-    // Fire newStatementClone
-    await statementFactoryDeploy.postNewStatement();
 
-    // console.log(newStatementClone)
-    let newStatementCloneInstance = StatementBankContract.attach("0xc451eb00627adfa5880868eda62493466c5bafbd")
-
-    // check main contract
-    let statementLogicInstance = StatementBankContract.attach("0x7c2C195CD6D34B8F845992d380aADB2730bB9C6F")
-
-    // check
-    let factoryInstance = CretterFactoryContract.attach("0x8858eeB3DfffA017D4BCE9801D340D36Cf895CCf")
-
-
-    console.log(await newStatementCloneInstance.statementBankBalance())
-    console.log(await statementLogicInstance.statementBankBalance())
-    console.log(await factoryInstance.statementBankBalance())
+    // console.log(await newStatementCloneInstance.statementBankBalance())
+    // console.log(await statementLogicInstance.statementBankBalance())
+    // console.log(await factoryInstance.statementBankBalance())
     
 
     // check if you can fund contract
     // it works
-    await newStatementCloneInstance.deposit({ value: eth.utils.parseEther("0.13") });
-    console.log(">>> Depositing into clone works: ", (await newStatementCloneInstance.statementBankBalance()).toString())
+    await statement.deposit({ value: eth.utils.parseEther("0.13") });
+    console.log(">>> Depositing into clone works: ", (await statement.statementBankBalance()).toString())
     // ***********/
   });
 
