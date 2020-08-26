@@ -36,7 +36,7 @@ describe("Token contract", function() {
     console.log("Hit first Unit test!!!!!!");
     
     // Fire newStatementClone
-    await statementFactoryDeploy.postNewStatement({ value: eth.utils.parseEther("0.22") });
+    await statementFactoryDeploy.postNewStatement();
 
     // console.log(newStatementClone)
     let newStatementCloneInstance = StatementBankContract.attach("0xc451eb00627adfa5880868eda62493466c5bafbd")

@@ -334,9 +334,8 @@ contract StatementFactory is CloneFactory {
     logicContractAddress = _statementBankLogicAdrr;
   }
 
-  function postNewStatement() public payable returns (address spawnedContract) {
-
-    require(msg.value == 0.22 ether, "Not enough money, try 0.22");
+  function postNewStatement() public returns (address spawnedContract) {
+      
     spawnedContract = createClone(logicContractAddress);
 
     // spawnedContract.transfer(msg.value);
