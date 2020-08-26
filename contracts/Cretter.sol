@@ -107,6 +107,10 @@ contract StatementBank {
         return address(this).balance;
     }
 
+    // Have problem sending money on Clone creation
+    // TODO Fix 1. create proxy Then 2. Funding the clone contract
+    function deposit() payable public {}
+
     // potential util for generating a random number to get
     // voter who gets reward
     // set to public for testing [TODO: must set to private]

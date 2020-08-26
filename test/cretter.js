@@ -51,14 +51,12 @@ describe("Token contract", function() {
     console.log(await statementLogicInstance.statementBankBalance())
     console.log(await factoryInstance.statementBankBalance())
     
-    // check all balances
-    /*
-    [statementLogicInstance, newStatementCloneInstance].forEach(async (instance, index) => {
-      let balance = await instance.statementBankBalance();
 
-      console.log(index, ", ", balance)
-    })
-    */
+    // check if you can fund contract
+    // it works
+    await newStatementCloneInstance.deposit({ value: eth.utils.parseEther("0.13") });
+    console.log(">>> Depositing into clone works: ", (await newStatementCloneInstance.statementBankBalance()).toString())
+    // ***********/
   });
 
   /*
