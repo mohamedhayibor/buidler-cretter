@@ -20,7 +20,7 @@ describe("Token contract", function() {
   //   CretterFactoryContract = await ethers.getContractFactory("StatementFactory");
   // })
 
-  beforeEach(async function() {
+  before(async function() {
     StatementBankContract = await ethers.getContractFactory("StatementBank");
     CretterFactoryContract = await ethers.getContractFactory("StatementFactory");
 
@@ -67,6 +67,22 @@ describe("Token contract", function() {
     // ***********/
   });
 
+  it("Addr1, addr2, addr3 ask a question, stater answer question 2", async function () {
+    // await statement.connect(addr1).questionerStake({ value: eth.utils.parseEther("0.004") });
+    
+
+    await statement.connect(addr2).questionerStake({ value: eth.utils.parseEther("0.004") });
+    await statement.connect(addr3).questionerStake({ value: eth.utils.parseEther("0.004") });
+
+    await statement.staterProvidesAnswer(1);
+    
+    // let questionGotAnswer = await statement.questionGotAnswer(1);
+
+    // expect(questionGotAnswer).to.equal(1);
+
+    // let statementBankBalance = await statement.statementBankBalance();
+    // expect(statementBankBalance).to.equal("52000000000000000");
+  });
 
 
   /*
@@ -120,20 +136,6 @@ describe("Token contract", function() {
     await statement.connect(addr1).questionerStake({ value: eth.utils.parseEther("0.004") });
 
     await expect(statement.connect(addr3).vote(0, 2)).to.be.reverted;
-  });
-
-  it("Addr1, addr2, addr3 ask a question, stater answer question 2", async function () {
-    await statement.connect(addr1).questionerStake({ value: eth.utils.parseEther("0.004") });
-    await statement.connect(addr2).questionerStake({ value: eth.utils.parseEther("0.004") });
-    await statement.connect(addr3).questionerStake({ value: eth.utils.parseEther("0.004") });
-
-    await statement.staterProvidesAnswer(1);
-    let questionGotAnswer = await statement.questionGotAnswer(1);
-
-    expect(questionGotAnswer).to.equal(1);
-
-    let statementBankBalance = await statement.statementBankBalance();
-    expect(statementBankBalance).to.equal("52000000000000000");
   });
 
   it("Addr3 votes answer question 2", async function () {
