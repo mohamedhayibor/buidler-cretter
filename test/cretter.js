@@ -52,7 +52,7 @@ describe("Token contract", function() {
   });
 
 
-  it("Post new statement as clone", async function () {
+  it("Critical path - ONE", async function () {
     console.log("Hit first Unit test!!!!!!");
 
     // console.log(await newStatementCloneInstance.statementBankBalance())
@@ -78,6 +78,10 @@ describe("Token contract", function() {
 
     console.log(">>> Statement statementTimeLock: ", (await statement.statementTimeLock()).toString())
 
+
+    await statement.connect(addr2).questionerStake({ value: eth.utils.parseEther("0.004") });
+
+    await statement.staterProvidesAnswer(0);
 
     await statement.finalizeQuestionerChallenge();
 

@@ -474,6 +474,11 @@ contract StatementBank is Ownable {
         // We need a bunch of checks here 
         // All rounds of questions challenges must be done
         // All question challenges finalized
+
+        console.log(" --|| lastQuestioner: ", lastQuestioner);
+        console.log(" --|| firstQuestioner: ", firstQuestioner);
+
+
         require(lastQuestioner == firstQuestioner);
         
         // TODO: implement time waiting requirement
