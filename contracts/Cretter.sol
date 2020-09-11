@@ -1,37 +1,80 @@
-pragma solidity ^0.6.8;
-
-// SPDX-License-Identifier: MIT
-// Above required: https://forum.openzeppelin.com/t/solidity-0-6-8-introduces-spdx-license-identifiers/2859
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.7.0;
 
 import "@nomiclabs/buidler/console.sol";
 
-library CheckOverflows {
-    function add(uint256 n1, uint256 n2) internal pure returns(uint256 n3) {
-        n3 = n1 + n2;
-        require(n3 >= n1);
-        return n3;
+
+
+
+// From https://github.com/OpenZeppelin/openzeppelin-contracts
+library SafeMath {
+    function add(uint256 a, uint256 b) internal pure returns (uint256) {
+        uint256 c = a + b;
+        require(c >= a, "SafeMath: addition overflow");
+
+        return c;
     }
 
-    function sub(uint256 n1, uint256 n2) internal pure returns(uint256) {
-        require(n2 <= n1);
-        return n1 - n2;
+    function sub(uint256 a, uint256 b) internal pure returns (uint256) {
+        return sub(a, b, "SafeMath: subtraction overflow");
     }
 
-    function mul(uint256 n1, uint256 n2) internal pure returns(uint256 n3) {
-        if (n1 == 0 || n2 == 0) {
+    function sub(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
+        require(b <= a, errorMessage);
+        uint256 c = a - b;
+
+        return c;
+    }
+
+    function mul(uint256 a, uint256 b) internal pure returns (uint256) {
+        // Gas optimization: this is cheaper than requiring 'a' not being zero, but the
+        // benefit is lost if 'b' is also tested.
+        // See: https://github.com/OpenZeppelin/openzeppelin-contracts/pull/522
+        if (a == 0) {
             return 0;
         }
 
-        n3 = n1 * n2;
-        require(n3 / n1 == n2);
-        return n3;
+        uint256 c = a * b;
+        require(c / a == b, "SafeMath: multiplication overflow");
+
+        return c;
     }
 
-    function div(uint256 n1, uint256 n2) internal pure returns(uint256) {
-        return n1 / n2;
+    function div(uint256 a, uint256 b) internal pure returns (uint256) {
+        return div(a, b, "SafeMath: division by zero");
+    }
+
+    function div(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
+        require(b > 0, errorMessage);
+        uint256 c = a / b;
+        // assert(a == b * c + a % b); // There is no case in which this doesn't hold
+
+        return c;
+    }
+
+    function mod(uint256 a, uint256 b) internal pure returns (uint256) {
+        return mod(a, b, "SafeMath: modulo by zero");
+    }
+
+    function mod(uint256 a, uint256 b, string memory errorMessage) internal pure returns (uint256) {
+        require(b != 0, errorMessage);
+        return a % b;
     }
 }
 
+contract CloneFactory {
+
+  function createClone(address target) internal returns (address result) {
+    bytes20 targetBytes = bytes20(target);
+    assembly {
+      let clone := mload(0x40)
+      mstore(clone, 0x3d602d80600a3d3981f3363d3d373d3d3d363d73000000000000000000000000)
+      mstore(add(clone, 0x14), targetBytes)
+      mstore(add(clone, 0x28), 0x5af43d82803e903d91602b57fd5bf30000000000000000000000000000000000)
+      result := create(0, clone, 0x37)
+    }
+  }
+}
 
 /*
  * This is 1st version of Cretter 2.0
@@ -52,7 +95,7 @@ library CheckOverflows {
 // Scheduler at 30 days kills the contract | to save space on network
 // and gas refund
 contract StatementBank {
-    using CheckOverflows for uint256;
+    using SafeMath for uint256;
 
     address payable public stater; // owner
 
@@ -67,30 +110,35 @@ contract StatementBank {
         return address(this).balance;
     }
 
+    // Have problem sending money on Clone creation
+    // TODO Fix 1. create proxy Then 2. Funding the clone contract
+    function deposit() payable public {}
+
     // potential util for generating a random number to get
     // voter who gets reward
     // set to public for testing [TODO: must set to private]
     // arg: _numberOfVoters number of voters
     // result: starts at zero | 
     function random(uint256 _numberOfVoters) public view returns (uint256) {
-        console.log(">>> [random] _numberOfVoters: ", _numberOfVoters);
-        uint256 result = uint256(keccak256(abi.encodePacked(block.timestamp, block.difficulty))) % _numberOfVoters;
-
-        console.log(">>> [random] result: ", result);
-        return result;
+        return uint256(keccak256(abi.encodePacked(block.timestamp, block.difficulty))).mod(_numberOfVoters);
     }
 
     // (1): stater posts a statement
-    constructor() public payable {
-        require(msg.value == 0.04 ether, "Fund statement");
-        stater = msg.sender;
-        firstQuestioner = 0;
-        lastQuestioner = 0;
+    function initialize(address payable _EOASender) public {
+        // payable
+        // require(msg.value == 0.04 ether);
+        // Ownable.initialize(msg.sender);
+
+
+        stater = _EOASender;
+
+        console.log("[StatementBank -> initialize] >>> stater: ", stater);
+
         // natural unit of time on EVM is seconds
-        createdAt = now;
+        createdAt = block.timestamp;
         // 18 days to ask a questions
-        questionDeadline = now + 22 days;
-        statementTimeLock = now + 31 days;
+        questionDeadline = block.timestamp.add(5 minutes);
+        statementTimeLock = block.timestamp.add(10 minutes);
     }
 
     // We're using a FIFO data structure, that represents the order of
@@ -109,9 +157,9 @@ contract StatementBank {
     // The more money in the contract (and less true), the more likely a questionerStake
     function questionerStake() payable public {
         // should be called before deadline
-        require(questionDeadline > now);
-        require(msg.value == 0.004 ether, "You must stake 0.004 eth");
-        require(stater != msg.sender, "Can't ask yourself a question");
+        require(questionDeadline > block.timestamp);
+        require(msg.value == 0.004 ether);
+        require(stater != msg.sender);
         lastQuestioner = lastQuestioner.add(1);
         questioners[lastQuestioner] = msg.sender;
     }
@@ -126,16 +174,14 @@ contract StatementBank {
     // The only way for the stater to signal that he/she actually answered
     // the question is by making a transaction
     function staterProvidesAnswer(uint256 _questionIndex) public {
-        require (msg.sender == stater, "only stater can provide an answer no one else");
-        
-        console.log(">>> [Stater answers] _questionIndex: ", _questionIndex);
+        require (msg.sender == stater);
+
         // stater can't signal he already answered a question
         // when a question hasn't been asked yet | mainly checking for existence
         require(lastQuestioner > _questionIndex, "question hasn't been asked yet");
         
+        // booleans take more space than uint256
         questionGotAnswer[_questionIndex] = 1;
-
-        console.log("{Stater answers} questionGotAnswer[_questionIndex]: ", questionGotAnswer[_questionIndex]);
         
         // TODO: disable stater being able to call this function again.
         // Stater can't update or edit, an already supplied answer
@@ -167,28 +213,23 @@ contract StatementBank {
     // 2nd arg: vote: 1 stater favor (agree answer), 2 questioner favor (disagree answer)
     function vote(uint256 _questionIndex, uint256 _vote) public {
         
-        require(questionGotAnswer[_questionIndex] == 1, "You can't vote if stater hasn't answered yet");
+        require(questionGotAnswer[_questionIndex] == 1);
         
         // stater or questioner can't vote
-        require(msg.sender != stater, "Stater can't vote");
-        require(msg.sender != questioners[_questionIndex], "questioner can't vote on his own question");
+        require(msg.sender != stater);
+        // This has a 0.2% gas limit addition so add it (not big)
+        require(msg.sender != questioners[_questionIndex]);
         
         // if already voted _questionIndex, can't vote again
-        require(hasAlreadyVoted[_questionIndex][msg.sender] != 1, "Cant double vote buddy");
+        require(hasAlreadyVoted[_questionIndex][msg.sender] != 1);
         
         // 1 stater favor (agree answer)
         if (_vote == 1) {
-            
-            console.log("Upvoted statement at position: ", _questionIndex);
-
             staterAgainstQuestionIndex[_questionIndex] = staterAgainstQuestionIndex[_questionIndex].add(1);
             votedForStater[_questionIndex].push(msg.sender);
             
         // 2 questioner favor (disagree answer)
         } else if (_vote == 2) {
-
-            console.log("Downvoted statement at position: ", _questionIndex);
-
             staterAgainstQuestionIndex[_questionIndex] = staterAgainstQuestionIndex[_questionIndex].sub(1);
             votedForQuestioner[_questionIndex].push(msg.sender);
         }
@@ -204,35 +245,26 @@ contract StatementBank {
     // * choose a random ranker who got it right and pay him $0.5
     // [originally 10% of the questioner's stake was the spec]
     function finalizeQuestionerChallenge () public returns (address removedQuestionerAddr) {
-        require(lastQuestioner >= firstQuestioner, "queue must be non-empty");
+        require(lastQuestioner >= firstQuestioner);
         
         // Test still
         // require(msg.sender == address(0xa639cc7A169E848B280acd1B493a7D5Af44507a4)); 
-        console.log(">>> [finalize] firstQuestioner: ", firstQuestioner);
 
         // If stater didn't answer, questioner wins automatically
         // 0 is the default (represent not having an answer)
 
         // If SAQI is 99, voters didn't move the needle, they don't get paid
         if (questionGotAnswer[firstQuestioner] == 0 || staterAgainstQuestionIndex[firstQuestioner] == 99) {
-            console.log(">>> stater didn't answer, or SAQI is 99, questioner wins automatically");
             questioners[firstQuestioner].transfer(0.008 ether);
-            
         } else if (staterAgainstQuestionIndex[firstQuestioner] < 100) {
             // questioner wins, he gets 2x his staked money
             questioners[firstQuestioner].transfer(0.008 ether);
-
-            console.log(">> [Finalize] stater lost: SAQI: ", staterAgainstQuestionIndex[firstQuestioner]);
 
             // reward a random ranker who betted on questioner
 
             uint256 questLen = votedForQuestioner[firstQuestioner].length;
 
-            console.log(">> [finalize] questLen: ", questLen);
-
             uint256 questVoteIndex = random(questLen);
-
-            console.log(">> [finalize] questVoteIndex: ", questVoteIndex);
 
             // Important votedForStater && votedForQuestioner started with index 0
             // Must decrease by 1 for proper indexing
@@ -249,7 +281,6 @@ contract StatementBank {
             // stater is winning (a tie, he's still winning) coz
             // the goal of questioner is to kill the statement
             // > nothing to do here money stays in the contract
-            console.log(">> [Finalize] stater won: SAQI: ", staterAgainstQuestionIndex[firstQuestioner]);
             // > reward a random ranker who betted on stater
             
             uint256 stateLen = votedForStater[firstQuestioner].length;
@@ -257,18 +288,14 @@ contract StatementBank {
             address payable staterRankingWinner = votedForStater[firstQuestioner][staterVoteIndex];
 
             
-            uint256 stateVoterReward = uint256(2000000000000000).sub( uint256(2000000000000000).mul(staterVoteIndex).div(stateLen) );
+            uint256 stateVoterReward = uint256(2000000000000000).sub(uint256(2000000000000000).mul(staterVoteIndex).div(stateLen));
             staterRankingWinner.transfer(stateVoterReward);
         }
         
         removedQuestionerAddr = questioners[firstQuestioner];
         delete questioners[firstQuestioner];
 
-        console.log("[finalize] first (before): ", firstQuestioner);
-
         firstQuestioner = firstQuestioner.add(1);
-
-        console.log("[finalize] first (after): ", firstQuestioner);
     }
     
     // Until a stater can retrieve money from the statementBankBalance
@@ -278,15 +305,23 @@ contract StatementBank {
     function staterReceivesLoot() public {
         // require(msg.sender == address(0xa639cc7A169E848B280acd1B493a7D5Af44507a4));
         // should be called after deadline
-        require(now > statementTimeLock);
 
-        console.log(">> [loot] firtQuestioner: ", firstQuestioner);
-        console.log(">> [loot] lastQuestioner: ", lastQuestioner);
+        console.log(" --|| block.timestamp: ", block.timestamp);
+        console.log(" --|| statementTimeLock: ", statementTimeLock);
+
+        require(block.timestamp > statementTimeLock);
+
+        
         
         // We need a bunch of checks here 
         // All rounds of questions challenges must be done
         // All question challenges finalized
-        require(lastQuestioner == firstQuestioner, "All question challenges should be resolved");
+
+        console.log(" --|| lastQuestioner: ", lastQuestioner);
+        console.log(" --|| firstQuestioner: ", firstQuestioner);
+
+
+        require(lastQuestioner == firstQuestioner);
         
         // TODO: implement time waiting requirement
         // The only strict restriction is that enough time like 2 weeks should go on
@@ -296,14 +331,50 @@ contract StatementBank {
         address payable cretterFundAddr = 0x87aD567CE024832E60529e11e70cb3788611F1E8;
         
         cretterFundAddr.transfer(fundCretterFuture);
-        stater.transfer(statementBankBalance() - fundCretterFuture);
-       
+        stater.transfer(statementBankBalance().sub(fundCretterFuture));      
     }
     
     // Funders can donate and keep statement live
     // for more interaction even after stater withdrawal
     // Reward always goes to stater though (if not drained by questioners)
-    function donateToStatementBank() public payable {
-        
-    }
+    // function donateToStatementBank() public payable {}
+}
+
+contract StatementFactory is CloneFactory {
+
+// Ownable,
+   //StatementBank[] public statementAddresses;
+
+  event NewStatementCreated(address newStatement);
+
+  address public logicContractAddress;
+
+  constructor(address payable _statementBankLogicAdrr) public {
+
+    // Ownable.initialize(msg.sender);
+    logicContractAddress = _statementBankLogicAdrr;
+  }
+
+  function postNewStatement() public returns (address spawnedContract) {
+      
+    spawnedContract = createClone(logicContractAddress);
+
+    // The sender must be owner, not the Factory
+    StatementBank(spawnedContract).initialize({
+      _EOASender: msg.sender
+    });
+
+    // spawnedContract.transfer(msg.value);
+    // proof of execution
+    // emit NewStatementCreated(spawnedContract);
+
+    console.log(">> postNewStatement(): ", spawnedContract);
+
+    // spawnedContract = Statement(spawnedContract).initialize();
+  }
+
+    // testing purposes
+  function statementBankBalance() public view returns (uint256) {
+    return address(this).balance;
+  }
 }

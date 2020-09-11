@@ -1,30 +1,139 @@
 const { expect } = require("chai");
-
 const { ethers } = require("@nomiclabs/buidler");
-
 const eth = require("ethers");
 
 
 describe("Token contract", function() {
-  let StatementBank;
+  let StatementBankContract;
+  let CretterFactoryContract;
+
+  let statementLogicDeploy;
+  let statementFactoryDeploy;
+  
+  let owner, addr1, addr2, addr3, addr4;
+  let currentStatementAddress;
+
   let statement;
-  let owner, addr1, addr2, addr3, addrs;
 
-  before(async function () {
-    StatementBank = await ethers.getContractFactory("StatementBank")
+  // before(async function () {
+  //   StatementBankContract = await ethers.getContractFactory("StatementBank");
+  //   CretterFactoryContract = await ethers.getContractFactory("StatementFactory");
+  // })
 
-    it("If user did not send 0.04 eth to fund the statement, tx must fail", async function () {
-      statement = await StatementBank.deploy();
-      expect( await statement.deployed() ).to.be.revertedWith("Fund statement");
-    });
+  before(async function() {
+    StatementBankContract = await ethers.getContractFactory("StatementBank");
+    CretterFactoryContract = await ethers.getContractFactory("StatementFactory");
+
+    statementLogicDeploy = await StatementBankContract.deploy();
+    await statementLogicDeploy.deployed();
+
+    currentStatementAddress = statementLogicDeploy.address;
+    console.log("Statement Logic deployed to: ", currentStatementAddress);
+
+    statementFactoryDeploy = await CretterFactoryContract.deploy(currentStatementAddress);
+    await statementFactoryDeploy.deployed();
+
+    console.log("statementContractFactory: ", statementFactoryDeploy.address);
+    [owner, addr1, addr2, addr3, addr4] = await ethers.getSigners();
+
+
+    // Fire newStatementClone
+    await statementFactoryDeploy.postNewStatement();
+
+    // console.log(newStatementClone)
+    statement = StatementBankContract.attach("0xc451eb00627adfa5880868eda62493466c5bafbd")
+
+    // check main contract
+    // let statementLogicInstance = StatementBankContract.attach("0x7c2C195CD6D34B8F845992d380aADB2730bB9C6F")
+
+    // check
+    // let factoryInstance = CretterFactoryContract.attach("0x8858eeB3DfffA017D4BCE9801D340D36Cf895CCf")
+
+  });
+
+
+  it("Critical path - ONE", async function () {
+    console.log("Hit first Unit test!!!!!!");
+
+    // console.log(await newStatementCloneInstance.statementBankBalance())
+    // console.log(await statementLogicInstance.statementBankBalance())
+    // console.log(await factoryInstance.statementBankBalance())
+    
+
+    // check if you can fund contract
+    // it works
+
+    console.log(">> EOA Sending: ", owner._address)
+
+    await statement.deposit({ value: eth.utils.parseEther("0.13") });
+
+
+    console.log(">>> Depositing into clone works: ", (await statement.statementBankBalance()).toString())
+
+    console.log(">>> Statement creator: ", await statement.stater())
+
+    console.log(">>> Statement creation Time: ", (await statement.createdAt()).toString())
+
+    console.log(">>> StatementDeadline: ", (await statement.questionDeadline()).toString())
+
+    console.log(">>> Statement statementTimeLock: ", (await statement.statementTimeLock()).toString())
+
+
+    await statement.connect(addr2).questionerStake({ value: eth.utils.parseEther("0.004") });
+
+    await statement.staterProvidesAnswer(0);
+
+    await statement.finalizeQuestionerChallenge();
+
+    // Time travelling to end of statementTimeLock
+    let statementTimeLock = await statement.statementTimeLock();
+    await ethers.provider.send("evm_mine", [Number(statementTimeLock.toString())]);
+
+
+    await statement.staterReceivesLoot();
+  });
+
+  /*
+  it("Addr1, addr2, addr3 ask a question, stater answer question 2", async function () {
+    // await statement.connect(addr1).questionerStake({ value: eth.utils.parseEther("0.004") });
+    
+
+    await statement.connect(addr2).questionerStake({ value: eth.utils.parseEther("0.004") });
+    await statement.connect(addr3).questionerStake({ value: eth.utils.parseEther("0.004") });
+
+    await statement.staterProvidesAnswer(1);
+    
+    // let questionGotAnswer = await statement.questionGotAnswer(1);
+
+    // expect(questionGotAnswer).to.equal(1);
+
+    // let statementBankBalance = await statement.statementBankBalance();
+    // expect(statementBankBalance).to.equal("52000000000000000");
+  });
+
+
+
+  it("Depositing 0.1 eth into clone contract", async function () {
+    // Fire newStatementClone
+    await statementFactoryDeploy.postNewStatement({ value: eth.utils.parseEther("0.22") });
+
+    // console.log(newStatementClone)
+    let newStatementCloneInstance = StatementBankContract.attach("0xc451eb00627adfa5880868eda62493466c5bafbd");
+
+    await newStatementCloneInstance.deposit({ value: eth.utils.parseEther("0.1") });
+
+    expect((await newStatementCloneInstance.statementBankBalance()).toString()).to.equal("100000000000000000");
   })
 
-  beforeEach(async function() {
-    statement = await StatementBank.deploy({ value: eth.utils.parseEther("0.04") })
-    await statement.deployed();
+  it("Any amount different than 0.004 eth stake will fail to ask question", async function () {
+    let stakeWrongAmount = statement.connect(addr1).questionerStake({ value: eth.utils.parseEther("0.008") });
+    await expect(stakeWrongAmount).to.be.reverted;
+    // let newStatementClone = await statementFactoryDeploy.connect(addr1).postNewStatement({ value: eth.utils.parseEther("0.22") }); // ();
+  });
 
-    [owner, addr1, addr2, addr3, ...addrs] = await ethers.getSigners();
-  })
+  it("Stater should NOT be able to signal answer, when question is not already asked", async function() {
+    await expect(statement.staterProvidesAnswer(0)).to.be.reverted;
+  });
 
   it("Stater must be owner of the contract", async function() {
     const stater = await statement.stater();
@@ -50,18 +159,10 @@ describe("Token contract", function() {
     expect(statementBankBalance).to.equal("44000000000000000");
   });
 
-  it("Addr1, addr2, addr3 ask a question, stater answer question 2", async function () {
+  it("Can't vote unless there is an answer already", async function() {
     await statement.connect(addr1).questionerStake({ value: eth.utils.parseEther("0.004") });
-    await statement.connect(addr2).questionerStake({ value: eth.utils.parseEther("0.004") });
-    await statement.connect(addr3).questionerStake({ value: eth.utils.parseEther("0.004") });
 
-    await statement.staterProvidesAnswer(1);
-    let questionGotAnswer = await statement.questionGotAnswer(1);
-
-    expect(questionGotAnswer).to.equal(1);
-
-    let statementBankBalance = await statement.statementBankBalance();
-    expect(statementBankBalance).to.equal("52000000000000000");
+    await expect(statement.connect(addr3).vote(0, 2)).to.be.reverted;
   });
 
   it("Addr3 votes answer question 2", async function () {
@@ -173,32 +274,5 @@ describe("Token contract", function() {
 
     await statement.staterReceivesLoot();
   });
-/*
-  it("Stater receives whatever is left", async function () {
-    await statement.connect(addr1).questionerStake({ value: eth.utils.parseEther("0.004") });
-    await statement.connect(addr2).questionerStake({ value: eth.utils.parseEther("0.004") });
-
-    await statement.staterProvidesAnswer(0);
-    await statement.staterProvidesAnswer(1);
-
-    await statement.connect(addr3).vote(0, 2);
-    await statement.connect(addr2).vote(0, 2);
-
-
-    await statement.finalizeQuestionerChallenge();
-
-    await statement.connect(addr3).vote(1, 2);
-    await statement.connect(addr2).vote(1, 2);
-
-    await statement.finalizeQuestionerChallenge();
-
-    // let cretterFundAddr = "0x87aD567CE024832E60529e11e70cb3788611F1E8";
-
-    // expect( () => statement.staterReceivesLoot().catch(err => err) ).to.changeBalance(cretterFundAddr, "4000000000000000");
-
-    // await statement.connect(addr1).vote(1, 2);
-    // await statement.connect(addr3).vote(1, 2);
-  });
-
-*/
+  */
 });
