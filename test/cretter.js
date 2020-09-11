@@ -66,6 +66,8 @@ describe("Token contract", function() {
     console.log(">> EOA Sending: ", owner._address)
 
     await statement.deposit({ value: eth.utils.parseEther("0.13") });
+
+
     console.log(">>> Depositing into clone works: ", (await statement.statementBankBalance()).toString())
 
     console.log(">>> Statement creator: ", await statement.stater())
@@ -77,11 +79,17 @@ describe("Token contract", function() {
     console.log(">>> Statement statementTimeLock: ", (await statement.statementTimeLock()).toString())
 
 
+    await statement.finalizeQuestionerChallenge();
 
-    // ***********/
+    // Time travelling to end of statementTimeLock
+    let statementTimeLock = await statement.statementTimeLock();
+    await ethers.provider.send("evm_mine", [Number(statementTimeLock.toString())]);
+
+
+    await statement.staterReceivesLoot();
   });
 
-    /*
+  /*
   it("Addr1, addr2, addr3 ask a question, stater answer question 2", async function () {
     // await statement.connect(addr1).questionerStake({ value: eth.utils.parseEther("0.004") });
     

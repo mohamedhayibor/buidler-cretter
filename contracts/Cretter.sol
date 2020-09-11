@@ -464,8 +464,12 @@ contract StatementBank is Ownable {
         // require(msg.sender == address(0xa639cc7A169E848B280acd1B493a7D5Af44507a4));
         // should be called after deadline
 
+        console.log(" --|| block.timestamp: ", block.timestamp);
+        console.log(" --|| statementTimeLock: ", statementTimeLock);
+
         require(block.timestamp > statementTimeLock);
 
+        
         
         // We need a bunch of checks here 
         // All rounds of questions challenges must be done
@@ -497,7 +501,7 @@ contract StatementFactory is Ownable, CloneFactory {
 
   address public logicContractAddress;
 
-  constructor(address payable _statementBankLogicAdrr) {
+  constructor(address payable _statementBankLogicAdrr) public {
 
     Ownable.initialize(msg.sender);
     logicContractAddress = _statementBankLogicAdrr;
