@@ -104,7 +104,7 @@ contract Ownable is Initializable, Context {
     /**
      * @dev Initializes the contract setting the deployer as the initial owner.
      */
-    function initialize(address sender) virtual public initializer {
+    function initialize(address payable sender) virtual public initializer {
         _owner = sender;
         emit OwnershipTransferred(address(0), _owner);
     }
@@ -282,12 +282,16 @@ contract StatementBank is Ownable {
     }
 
     // (1): stater posts a statement
-    function initialize(address _owner) override virtual public initializer {
+    function initialize(address payable _EOASender) override public initializer {
         // payable
         // require(msg.value == 0.04 ether);
-        Ownable.initialize(_owner);
+        // Ownable.initialize(msg.sender);
 
-        stater = msg.sender;
+
+        stater = _EOASender;
+
+        console.log("[StatementBank -> initialize] >>> stater: ", stater);
+
         // natural unit of time on EVM is seconds
         createdAt = block.timestamp;
         // 18 days to ask a questions
@@ -503,9 +507,14 @@ contract StatementFactory is Ownable, CloneFactory {
       
     spawnedContract = createClone(logicContractAddress);
 
+    // The sender must be owner, not the Factory
+    StatementBank(spawnedContract).initialize({
+      _EOASender: msg.sender
+    });
+
     // spawnedContract.transfer(msg.value);
     // proof of execution
-    emit NewStatementCreated(spawnedContract);
+    // emit NewStatementCreated(spawnedContract);
 
     console.log(">> postNewStatement(): ", spawnedContract);
 

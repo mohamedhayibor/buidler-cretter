@@ -62,11 +62,26 @@ describe("Token contract", function() {
 
     // check if you can fund contract
     // it works
+
+    console.log(">> EOA Sending: ", owner._address)
+
     await statement.deposit({ value: eth.utils.parseEther("0.13") });
     console.log(">>> Depositing into clone works: ", (await statement.statementBankBalance()).toString())
+
+    console.log(">>> Statement creator: ", await statement.stater())
+
+    console.log(">>> Statement creation Time: ", (await statement.createdAt()).toString())
+
+    console.log(">>> StatementDeadline: ", (await statement.questionDeadline()).toString())
+
+    console.log(">>> Statement statementTimeLock: ", (await statement.statementTimeLock()).toString())
+
+
+
     // ***********/
   });
 
+    /*
   it("Addr1, addr2, addr3 ask a question, stater answer question 2", async function () {
     // await statement.connect(addr1).questionerStake({ value: eth.utils.parseEther("0.004") });
     
@@ -85,7 +100,7 @@ describe("Token contract", function() {
   });
 
 
-  /*
+
   it("Depositing 0.1 eth into clone contract", async function () {
     // Fire newStatementClone
     await statementFactoryDeploy.postNewStatement({ value: eth.utils.parseEther("0.22") });
