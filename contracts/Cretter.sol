@@ -1,11 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.7.0;
 
-import "@nomiclabs/buidler/console.sol";
-
-
-
-
 // From https://github.com/OpenZeppelin/openzeppelin-contracts
 library SafeMath {
     function add(uint256 a, uint256 b) internal pure returns (uint256) {
@@ -131,8 +126,6 @@ contract StatementBank {
 
 
         stater = _EOASender;
-
-        console.log("[StatementBank -> initialize] >>> stater: ", stater);
 
         // natural unit of time on EVM is seconds
         createdAt = block.timestamp;
@@ -305,21 +298,11 @@ contract StatementBank {
     function staterReceivesLoot() public {
         // require(msg.sender == address(0xa639cc7A169E848B280acd1B493a7D5Af44507a4));
         // should be called after deadline
-
-        console.log(" --|| block.timestamp: ", block.timestamp);
-        console.log(" --|| statementTimeLock: ", statementTimeLock);
-
         require(block.timestamp > statementTimeLock);
 
-        
-        
         // We need a bunch of checks here 
         // All rounds of questions challenges must be done
         // All question challenges finalized
-
-        console.log(" --|| lastQuestioner: ", lastQuestioner);
-        console.log(" --|| firstQuestioner: ", firstQuestioner);
-
 
         require(lastQuestioner == firstQuestioner);
         
@@ -367,9 +350,6 @@ contract StatementFactory is CloneFactory {
     // spawnedContract.transfer(msg.value);
     // proof of execution
     // emit NewStatementCreated(spawnedContract);
-
-    console.log(">> postNewStatement(): ", spawnedContract);
-
     // spawnedContract = Statement(spawnedContract).initialize();
   }
 

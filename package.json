@@ -4,7 +4,8 @@
   "description": "Testing Cretter SM with buidler",
   "main": "index.js",
   "scripts": {
-    "start": "npm run compile && npm run test",
+    "start": "npm run clean && npm run compile && npm run test",
+    "clean": "npx buidler clean",
     "test": "npx buidler test",
     "compile": "npx buidler compile",
     "eth-reporter": "npx buidler test --network localhost",
