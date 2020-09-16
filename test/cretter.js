@@ -20,7 +20,7 @@ describe("Token contract", function() {
   //   CretterFactoryContract = await ethers.getContractFactory("StatementFactory");
   // })
 
-  before(async function() {
+  beforeEach(async function() {
     StatementBankContract = await ethers.getContractFactory("StatementBank");
     CretterFactoryContract = await ethers.getContractFactory("StatementFactory");
 
@@ -79,10 +79,31 @@ describe("Token contract", function() {
     console.log(">>> Statement statementTimeLock: ", (await statement.statementTimeLock()).toString())
 
 
+    // 1st question
     await statement.connect(addr2).questionerStake({ value: eth.utils.parseEther("0.004") });
+    // 2nd question
+    await statement.connect(addr2).questionerStake({ value: eth.utils.parseEther("0.004") });
+    // 3rd question
+    await statement.connect(addr3).questionerStake({ value: eth.utils.parseEther("0.004") });
+
+    // answer 1st
+    await statement.staterProvidesAnswer(0);
+    // answer 2nd
+    await statement.staterProvidesAnswer(1);
+    // answer 3rd
+    await statement.staterProvidesAnswer(2);
+
+
+    await statement.connect(addr1).vote(0, 2);
+    await statement.connect(addr1).vote(1, 2);
+    await statement.connect(addr1).vote(2, 2);
+
+
 
     await statement.staterProvidesAnswer(0);
 
+    await statement.finalizeQuestionerChallenge();
+    await statement.finalizeQuestionerChallenge();
     await statement.finalizeQuestionerChallenge();
 
     // Time travelling to end of statementTimeLock
@@ -91,6 +112,8 @@ describe("Token contract", function() {
 
 
     await statement.staterReceivesLoot();
+
+    console.log(">>> Final contract balance: ", (await statement.statementBankBalance()).toString());
   });
 
   /*
@@ -110,8 +133,9 @@ describe("Token contract", function() {
     // let statementBankBalance = await statement.statementBankBalance();
     // expect(statementBankBalance).to.equal("52000000000000000");
   });
+  */
 
-
+  /*
 
   it("Depositing 0.1 eth into clone contract", async function () {
     // Fire newStatementClone
